@@ -1,0 +1,69 @@
+{
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.format": "explicit"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    "twc\\.[^`]+`([^`]*)`",
+    "twc\\(.*?\\).*?`([^`]*)",
+    ["twc\\.[^`]+\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["twc\\(.*?\\).*?\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    "twx\\.[^`]+`([^`]*)`",
+    "twx\\(.*?\\).*?`([^`]*)",
+    ["twx\\.[^`]+\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["twx\\(.*?\\).*?\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "cSpell.words": [
+    "Colorpicker",
+    "ecommerce",
+    "jiret",
+    "jiretjs",
+    "Mantine",
+    "MINIO",
+    "SIGNUP",
+    "tabler"
+  ],
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.files.exclude": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.hg/**",
+    "**/.svn/**",
+    "**/.next/**"
+  ],
+  "tailwindCSS.validate": true,
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "*.scss": "tailwindcss"
+  },
+  "cssVariables.lookupFiles": [
+    "**/*.css",
+    "**/*.scss",
+    "**/*.sass",
+    "**/*.less",
+    "node_modules/@mantine/core/styles.css"
+  ],
+  "editor.rulers": [80, 120],
+  "i18n-ally.localesPaths": ["./apps/jiret/messages"],
+  "i18n-ally.enabledFrameworks": ["next-intl"],
+  "i18n-ally.editor.preferEditor": true,
+  "eslint.format.enable": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "workbench.editor.customLabels.patterns": {
+    "**/app/**/page.tsx": "${dirname} - page",
+    "**/app/**/layout.tsx": "${dirname} - layout",
+    "**/app/**/route.ts": "${dirname} - route",
+    "**/components/**/index.tsx": "${dirname} - component",
+    "**/_components/**/index.tsx": "${dirname} - component"
+  },
+  "CodeGPT.apiKey": "CodeGPT Plus Beta"
+}

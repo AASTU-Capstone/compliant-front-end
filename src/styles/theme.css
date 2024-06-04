@@ -1,0 +1,52 @@
+:root {
+  --primary-color-default: #3372d6;
+  --primary-color-text: #2d3c41;
+  --primary-color-background: #f5fbfe;
+  --primary-color-body: #fff;
+  --primary-color-border: #e5e7eb;
+
+  --rem: 14px;
+  --body: #f5fbfe;
+  --radius: 0.5rem;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --primary-color-text: #e6edf3;
+  --primary-color-body: #0d1117;
+  --primary-color-background: #03060a;
+  --primary-color-border: #424242;
+}
+
+html {
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: normal;
+  font: 16px/24px var(--font-family-base);
+  color: var(--primary-color-text);
+}
+
+.border {
+  border-color: var(--primary-color-border) !important;
+}
+
+body {
+  --mantine-color-body: var(--primary-color-body);
+  --mantine-color-text: var(--primary-color-text);
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-xl	 bg-slate-300;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
