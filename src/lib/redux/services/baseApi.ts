@@ -1,10 +1,7 @@
 "use client";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { RootState } from "../store";
 import { HYDRATE } from "next-redux-wrapper";
 // import { cookies } from 'next/headers'
-import { get } from "https";
-import { browser } from "process";
 
 /**
  * The base API configuration for making API requests.
@@ -13,7 +10,7 @@ import { browser } from "process";
 const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://anonymous-whisper-ftie.onrender.com/api/",
+    baseUrl: "http://localhost:5097/api/",
     prepareHeaders: (headers, { getState }) => {
       // const cookieStore = cookies()
       // console.log((typeof window !== "undefined") ? "client" : "server")

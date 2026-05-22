@@ -19,7 +19,7 @@ export const WebSocketProvider = ({
 
   const connectWebSocket = (userId: string) => {
     const ws = new WebSocket(
-      `wss://anonymous-whisper.onrender.com/notification?userId=${userId}`
+      `wss://anonymous-whisper-ftie.onrender.com/notification?userId=${userId}`
     );
 
     ws.onopen = () => {
@@ -64,7 +64,7 @@ export const WebSocketProvider = ({
     const userId = localStorage.getItem("userId");
     if (userId) {
       const ws = new WebSocket(
-        `wss://anonymous-whisper.onrender.com/notification?userId=${userId}`
+        `wss://anonymous-whisper-ftie.onrender.com/notification?userId=${userId}`
       );
 
       ws.onopen = () => {
