@@ -10,7 +10,7 @@ import { HYDRATE } from "next-redux-wrapper";
 const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5097/api/",
+    baseUrl: "https://anonymous-whisper-ftie.onrender.com/api/",
     prepareHeaders: (headers, { getState }) => {
       // const cookieStore = cookies()
       // console.log((typeof window !== "undefined") ? "client" : "server")
