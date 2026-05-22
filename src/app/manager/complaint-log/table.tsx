@@ -1,7 +1,6 @@
 "use client";
 import DataTable from "@/shared/table";
-import ViewComplaintResponse from "@/shared/view-complaint-reponse";
-import { Box, Button, Flex, Input, Menu, Modal, Text } from "@mantine/core";
+import { ActionIcon, Box, Button, Flex, Input, Menu, Modal, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import {
@@ -14,29 +13,59 @@ import {
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { Column } from "react-table";
-import { Data } from "./page";
+import {
+  GetComplaintLogToUpdateForManagerResponse,
+  UpdateComplaintLogStatusInput,
+} from "@/types/";
+import { useUpdateComplaintLogStatusMutation } from "@/lib/redux/features/manager";
+import ViewComplaintLogById from "./viewmodal";
 
-const ComplaintsLogBody = ({ data }: { data: Data[] }) => {
+const ComplaintsLogBody = ({
+  data,
+  totalCount,
+  pageSize,
+  currentPage,
+  setPageSize,
+  setPageNumber,
+  refetchComplaintLogs,
+}: {
+  data: GetComplaintLogToUpdateForManagerResponse[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageNumber: React.Dispatch<React.SetStateAction<number>>;
+  refetchComplaintLogs: () => void;
+}) => {
   const [isViewModalOpened, { open: openViewModal, close: closeViewModal }] =
     useDisclosure(false);
+  const [updateComplaintLogStatus] = useUpdateComplaintLogStatusMutation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [id, setId] = useState("");
 
-  const [complaint, setComplaint] = useState();
-  const [rejecting, isRejecting] = useState(false);
+  const filteredData = useMemo(() => {
+    return data.filter((item: GetComplaintLogToUpdateForManagerResponse) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, data]);
 
   const handleAccept = (id: string) => {
     modals.openConfirmModal({
       title: "Accept Complaint",
       centered: true,
       children: (
-        <Text size="sm">Are you sure you want to Accept this complaint</Text>
+        <Text size="sm">Are you sure you want to Accept this complaint?</Text>
       ),
       labels: { confirm: "Accept Complaint", cancel: "Cancel" },
       confirmProps: { color: "green" },
       closeOnConfirm: true,
       onConfirm: async () => {
-        // delete from the db
-        console.log(`Delete item with id: ${id}`);
-        return;
+        const input: UpdateComplaintLogStatusInput = {
+          complaintLogId: id,
+          status: "submitted",
+        };
+        await updateComplaintLogStatus(input).unwrap();
+        refetchComplaintLogs();
       },
     });
   };
@@ -46,155 +75,118 @@ const ComplaintsLogBody = ({ data }: { data: Data[] }) => {
       title: "Reject Complaint",
       centered: true,
       children: (
-        <Text size="sm">Are you sure you want to Reject this complaint</Text>
+        <Text size="sm">Are you sure you want to Reject this complaint?</Text>
       ),
       labels: { confirm: "Reject Complaint", cancel: "Cancel" },
       confirmProps: { color: "red" },
       closeOnConfirm: true,
       onConfirm: async () => {
-        // delete from the db
-        console.log(`Delete item with id: ${id}`);
-        return;
+        const input: UpdateComplaintLogStatusInput = {
+          complaintLogId: id,
+          status: "processing",
+        };
+        await updateComplaintLogStatus(input);
+        refetchComplaintLogs();
       },
     });
   };
 
   const handleView = (id: string) => {
-    // fetch the complaint using the id
-    // set to setComplaint after fetching the complaint
-    // the open the modal by calling open()
+    setId(id);
     openViewModal();
   };
 
-  const columns: Array<Column<Data>> = useMemo(
-    () => [
-      {
-        Header: "Title",
-        accessor: "title",
-        Cell: ({ value }) => (
-          <div className="text-sm font-medium text-gray-900">{value}</div>
-        ),
-      },
-      {
-        Header: "Priority",
-        accessor: "priority",
-        Cell: ({ value }) => {
-          const statusClass =
-            value === "high"
-              ? "bg-red-200 text-red-800"
-              : value === "medium"
-                ? "bg-blue-200 text-blue-800"
-                : "bg-gray-200 text-gray-800";
-          return (
-            <span
-              className={`py-1 px-5 text-center text-xs leading-5 font-semibold rounded-full ${statusClass}`}
-            >
-              {value}
-            </span>
-          );
+  const columns: Array<Column<GetComplaintLogToUpdateForManagerResponse>> =
+    useMemo(
+      () => [
+        {
+          Header: "Title",
+          accessor: "title",
+          Cell: ({ value }) => (
+            <div className="text-sm font-medium text-gray-900">{value}</div>
+          ),
         },
-      },
-      {
-        Header: "Created Date",
-        accessor: "createdDate",
-      },
-      {
-        Header: "Subordinate",
-        accessor: "subordinate",
-      },
-      {
-        Header: "Action",
-        Cell: ({ row }) => (
-          <div className="flex space-x-4">
-            <button
-              onClick={() => handleView(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <IconEye className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => handleAccept(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <IconSquareCheck color="green" className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => handleReject(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <IconSquareX color="red" className="w-5 h-5" />
-            </button>
-          </div>
-        ),
-      },
-    ],
-    []
-  );
+        {
+          Header: "Priority",
+          accessor: "priority",
+          Cell: ({ value }) => {
+            const statusClass =
+              value.toLowerCase() === "high"
+                ? "bg-red-200 text-red-800"
+                : value.toLowerCase() === "medium"
+                  ? "bg-blue-200 text-blue-800"
+                  : "bg-gray-200 text-gray-800";
+            return (
+              <span
+                className={`py-1 px-5 text-center text-xs leading-5 font-semibold rounded-full ${statusClass}`}
+              >
+                {value}
+              </span>
+            );
+          },
+        },
+        {
+          Header: "Created Date",
+          accessor: "createdAt",
+        },
+        {
+          Header: "Action",
+          accessor: 'id',
+          Cell: ({ value }) => (
+            <div className="flex space-x-4">
+              <ActionIcon
+                variant="light"
+                onClick={() => handleView(value)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <IconEye className="w-5 h-5" />
+              </ActionIcon>
+              <ActionIcon
+                variant="light"
+                onClick={() => handleAccept(value)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <IconSquareCheck color="green" className="w-5 h-5" />
+              </ActionIcon>
+              <ActionIcon
+                variant="light"
+                onClick={() => handleReject(value)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <IconSquareX color="red" className="w-5 h-5" />
+              </ActionIcon>
+            </div>
+          ),
+        },
+      ],
+      []
+    );
 
   return (
     <>
-      <Modal
-        size="70%"
-        centered
-        opened={isViewModalOpened}
-        onClose={closeViewModal}
-        title="Complaint"
-      >
-        <ViewComplaintResponse complaint={complaint} />
-      </Modal>
-      <Text className="text-primary-default  font-bold text-2xl mb-5">
-        Complaints
-      </Text>
-      <Flex className="gap-3 items-center">
-        <Input
-          placeholder="Search"
-          radius="md"
-          w={350}
-          leftSection={<IconSearch />}
-        />
-
-        <Button>Search</Button>
-
-        <Menu>
-          <Menu.Target>
-            <Button
-              variant="transparent"
-              className="text-primary-text"
-              rightSection={<IconChevronDown />}
-            >
-              Sort by
-            </Button>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Item>Items</Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-        <Menu>
-          <Menu.Target>
-            <Button
-              variant="transparent"
-              className="text-primary-text"
-              rightSection={<IconChevronDown />}
-            >
-              Saved Search
-            </Button>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Item>Items</Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-        <IconAdjustmentsHorizontal className="cursor-pointer" />
-      </Flex>
+    
+      
       <Box className="w-full mt-7">
         <Box>
           <Text className="text-xl px-5 py-4 bg-primary-body">
-            My Complaints
+            My Complaint Logs
           </Text>
         </Box>
-
-        <DataTable columns={columns} data={data} pageSize={5} />
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          setPageSize={setPageSize}
+          setPageNumber={setPageNumber}
+        />
+        <ViewComplaintLogById
+          id={id}
+          openViewModal={openViewModal}
+          closeViewModal={closeViewModal}
+          isViewModalOpened={isViewModalOpened}
+        />
       </Box>
     </>
   );

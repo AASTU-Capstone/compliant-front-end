@@ -1,5 +1,5 @@
 "use client";
-import CreateComplaint from "@/app/(public)/_components/create-complaint";
+import CreateComplaint from "@/app/(public)/user/_components/create-complaint";
 import { Box, Button, Flex, Modal, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 

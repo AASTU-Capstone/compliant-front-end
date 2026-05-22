@@ -1,6 +1,7 @@
 "use client";
 import DataTable from "@/shared/table";
 import {
+  ActionIcon,
   Box,
   Button,
   Flex,
@@ -16,17 +17,138 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
+  IconEdit,
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Column } from "react-table";
-import { Data } from "./page";
+import { ManagerResponse, AddManagerInput, EditManagerInput } from "@/types";
+import { useAddManagerForAdminMutation, useUpdateManagerForAdminMutation } from "@/lib/redux/features/admin";
 
-const ManagersList = ({ data }: { data: Data[] }) => {
+const ManagersList = ({
+  data,
+  totalCount,
+  pageSize,
+  currentPage,
+  setPageSize,
+  setPageNumber,
+  refetchManagers,
+}: {
+  data: ManagerResponse[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageNumber: React.Dispatch<React.SetStateAction<number>>;
+  refetchManagers: () => void;
+}) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [editOpened, { open: editOpen, close: editClose }] = useDisclosure(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<string | null>(null);
+  const [createManager] = useAddManagerForAdminMutation();
+  const [updateManager] = useUpdateManagerForAdminMutation();
+  const [managerId, setManagerId] = useState("");
 
-  const columns: Array<Column<Data>> = useMemo(
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [roleError, setRoleError] = useState("");
+
+  const handleAddManager = async () => {
+    setNameError("");
+    setEmailError("");
+    setRoleError("");
+
+    let valid = true;
+    if (!name) {
+      setNameError("Please enter a name.");
+      valid = false;
+    }
+    if (!email) {
+      setEmailError("Please enter an email.");
+      valid = false;
+    }
+    if (!role) {
+      setRoleError("Please select a role.");
+      valid = false;
+    }
+
+    if (!valid) {
+      return;
+    }
+
+    const newManager: AddManagerInput = {
+      name,
+      email,
+      role,
+    };
+
+    try {
+      await createManager(newManager).unwrap();
+      refetchManagers();
+      setName("");
+      setEmail("");
+      setRole(null);
+      close();
+    } catch (error) {
+      console.error("Failed to add manager: ", error);
+    }
+  };
+
+  const resetValues = () => {
+    setNameError("");
+    setEmailError("");
+    setRoleError("");
+    close();
+    editClose();
+  };
+
+  const editManagerHandler = async () => {
+    setNameError("");
+    setEmailError("");
+
+    let valid = true;
+    if (!name) {
+      setNameError("Please enter a name.");
+      valid = false;
+    }
+    if (!email) {
+      setEmailError("Please enter an email.");
+      valid = false;
+    }
+
+    if (!valid) {
+      return;
+    }
+
+    const editManager: EditManagerInput = {
+      id: managerId,
+      name,
+      email,
+    };
+
+    try {
+      await updateManager(editManager);
+      refetchManagers();
+      setName("");
+      setEmail("");
+      setRole(null);
+      editClose();
+    } catch (error) {
+      console.error("Failed to update manager: ", error);
+    }
+  };
+
+  const assignId = (id: string) => {
+    editOpen();
+    setManagerId(id);
+    return;
+  };
+
+  const columns: Array<Column<ManagerResponse>> = useMemo(
     () => [
       {
         Header: "Name",
@@ -54,11 +176,29 @@ const ManagersList = ({ data }: { data: Data[] }) => {
       },
       {
         Header: "Created Date",
-        accessor: "createdDate",
+        accessor: "createdAt",
       },
       {
         Header: "Email",
         accessor: "email",
+      },
+      {
+        Header: "Action",
+        accessor: 'id',
+        Cell: ({ value }) => {
+          return (
+            <div className="flex space-x-4">
+              <ActionIcon variant="light">
+                <button
+                  onClick={(e) => assignId(value)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <IconEdit className="w-5 h-5" />
+                </button>
+              </ActionIcon>
+            </div>
+          );
+        },
       },
     ],
     []
@@ -66,18 +206,70 @@ const ManagersList = ({ data }: { data: Data[] }) => {
 
   return (
     <>
-      <Modal centered opened={opened} onClose={close} title="Managers">
+      {/* Add Manager Modal */}
+      <Modal centered opened={opened} onClose={resetValues} title="Add Managers">
         <Flex className="flex-col my-5 gap-7">
-          <TextInput placeholder="Full Name" required />
-          <TextInput placeholder="Email" required />
-          <Select
-            placeholder="Select Role Type"
-            data={["Super Admin", "Admin", "HR-Admin"]}
-          />
+          <div>
+            <TextInput
+              placeholder="Full Name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            {nameError && <span className="text-red-500 text-sm">{nameError}</span>}
+          </div>
+          <div>
+            <TextInput
+              placeholder="Email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {emailError && <span className="text-red-500 text-sm">{emailError}</span>}
+          </div>
+          <div>
+            <Select
+              placeholder="Select Role Type"
+              data={["premitigation", "postmitigation"]}
+              value={role}
+              onChange={(value) => setRole(value)}
+            />
+            {roleError && <span className="text-red-500 text-sm">{roleError}</span>}
+          </div>
         </Flex>
         <Group justify="end">
-          <Button>Add Manager</Button>
-          <Button variant="light" onClick={close}>
+          <Button onClick={handleAddManager}>Add Manager</Button>
+          <Button variant="light" onClick={resetValues}>
+            Cancel
+          </Button>
+        </Group>
+      </Modal>
+
+      {/* Edit Manager Modal */}
+      <Modal centered opened={editOpened} onClose={resetValues} title="Edit Managers">
+        <Flex className="flex-col my-5 gap-7">
+          <div>
+            <TextInput
+              placeholder="Full Name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            {nameError && <span className="text-red-500 text-sm">{nameError}</span>}
+          </div>
+          <div>
+            <TextInput
+              placeholder="Email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {emailError && <span className="text-red-500 text-sm">{emailError}</span>}
+          </div>
+        </Flex>
+        <Group justify="end">
+          <Button onClick={editManagerHandler}>Edit Manager</Button>
+          <Button variant="light" onClick={resetValues}>
             Cancel
           </Button>
         </Group>
@@ -87,18 +279,20 @@ const ManagersList = ({ data }: { data: Data[] }) => {
         Managers Dashboard
       </Text>
       <Flex className="gap-3 items-center">
-        <Input
+        {/* <Input
           placeholder="Search"
           radius="md"
           w={350}
           leftSection={<IconSearch />}
-        />
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        /> */}
 
         <Button rightSection={<IconPlus />} onClick={open}>
           Add Manager
         </Button>
 
-        <Menu>
+        {/* <Menu>
           <Menu.Target>
             <Button
               variant="transparent"
@@ -127,8 +321,8 @@ const ManagersList = ({ data }: { data: Data[] }) => {
           <Menu.Dropdown>
             <Menu.Item>Items</Menu.Item>
           </Menu.Dropdown>
-        </Menu>
-        <IconAdjustmentsHorizontal className="cursor-pointer" />
+        </Menu> */}
+        {/* <IconAdjustmentsHorizontal className="cursor-pointer" /> */}
       </Flex>
       <Box className="w-full mt-7">
         <Box>
@@ -137,7 +331,15 @@ const ManagersList = ({ data }: { data: Data[] }) => {
           </Text>
         </Box>
 
-        <DataTable columns={columns} data={data} pageSize={5} />
+        <DataTable
+          columns={columns}
+          data={data}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          setPageSize={setPageSize}
+          setPageNumber={setPageNumber}
+        />
       </Box>
     </>
   );

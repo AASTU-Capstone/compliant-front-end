@@ -1,52 +1,53 @@
-import React, { useMemo, useState } from "react";
-import { useTable } from "react-table";
+"use client";
+import React, { useMemo } from "react";
+import { useTable, Column } from "react-table";
 
-type DataTableProps<T> = {
-  columns: any;
-  data: any;
+type DataTableProps<T extends object> = {
+  columns: Column<T>[];
+  data: T[];
+  totalCount: number;
   pageSize: number;
+  currentPage: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageNumber: React.Dispatch<React.SetStateAction<number>>;
 };
 
-function DataTable<T>({ columns, data, pageSize: size }: DataTableProps<T>) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(size);
-
-  const pageCount = Math.ceil(data.length / pageSize);
-  const currentPageData = useMemo(() => {
-    const startIndex = currentPage * pageSize;
-    return data.slice(startIndex, startIndex + pageSize);
-  }, [currentPage, pageSize, data]);
+function DataTable<T extends object>({
+  columns,
+  data,
+  totalCount,
+  pageSize,
+  currentPage,
+  setPageSize,
+  setPageNumber,
+}: DataTableProps<T>) {
+  const pageCount = useMemo(() => Math.ceil(totalCount / pageSize), [totalCount, pageSize]);
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({ columns, data: currentPageData });
+    useTable({ columns, data });
 
   const handlePreviousPage = () => {
-    setCurrentPage((old) => Math.max(0, old - 1));
+    setPageNumber((old) => Math.max(1, old - 1));
   };
 
   const handleNextPage = () => {
-    setCurrentPage((old) => Math.min(pageCount - 1, old + 1));
+    setPageNumber((old) => Math.min(pageCount, old + 1));
   };
 
   const handlePageSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setPageSize(Number(event.target.value));
-    setCurrentPage(0); // Reset to first page
+    setPageNumber(1); // Reset to first page
   };
 
   return (
     <div className="overflow-x-auto">
-      <table
-        {...getTableProps()}
-        className="min-w-full divide-y divide-gray-200"
-      >
+      <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
         <thead className="bg-[#f1f7ff]">
           {headerGroups.map((headerGroup) => (
-            // eslint-disable-next-line react/jsx-key
             <tr {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map((column) => (
-                // eslint-disable-next-line react/jsx-key
                 <th
                   {...column.getHeaderProps()}
                   className="px-6 py-6 text-left text-sm font-medium text-gray-500 uppercase tracking-wider"
@@ -57,17 +58,12 @@ function DataTable<T>({ columns, data, pageSize: size }: DataTableProps<T>) {
             </tr>
           ))}
         </thead>
-        <tbody
-          {...getTableBodyProps()}
-          className="bg-white divide-y divide-gray-200"
-        >
+        <tbody {...getTableBodyProps()} className="bg-white divide-y divide-gray-200">
           {rows.map((row) => {
             prepareRow(row);
             return (
-              // eslint-disable-next-line react/jsx-key
               <tr {...row.getRowProps()}>
                 {row.cells.map((cell) => (
-                  // eslint-disable-next-line react/jsx-key
                   <td
                     {...cell.getCellProps()}
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
@@ -97,22 +93,21 @@ function DataTable<T>({ columns, data, pageSize: size }: DataTableProps<T>) {
         </div>
         <div className="flex items-center text-sm text-gray-700">
           <span>
-            {currentPage * pageSize + 1}-
-            {Math.min((currentPage + 1) * pageSize, data.length)} of{" "}
-            {data.length}
+            {(currentPage - 1) * pageSize + 1}-
+            {Math.min(currentPage * pageSize, totalCount)} of {totalCount}
           </span>
         </div>
         <div className="flex items-center">
           <button
             onClick={handlePreviousPage}
-            disabled={currentPage === 0}
+            disabled={currentPage === 1}
             className="px-2 py-1 mx-1 border border-gray-300 rounded disabled:opacity-50"
           >
             &larr;
           </button>
           <button
             onClick={handleNextPage}
-            disabled={currentPage === pageCount - 1}
+            disabled={currentPage === pageCount}
             className="px-2 py-1 mx-1 border border-gray-300 rounded disabled:opacity-50"
           >
             &rarr;

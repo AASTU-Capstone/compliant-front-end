@@ -1,60 +1,47 @@
+"use client";
 import { Box } from "@mantine/core";
 import ManagersList from "./table";
+import { useGetManagersForAdminQuery } from "@/lib/redux/features/admin";
+import { ManagerResponse } from "@/types";
+import { useState, useEffect } from "react";
 
-export interface Data {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  createdDate: string;
-}
+const Page = () => {
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
-const data: Data[] = [
-  {
-    id: "1",
-    name: "David Wagner",
-    role: "Super Admin",
-    createdDate: "24 Oct, 2015",
-    email: "Lorem Ipsum",
-  },
-  {
-    id: "2",
-    name: "Ina Hogan",
-    role: "Admin",
-    createdDate: "24 Oct, 2015",
-    email: "Lorem Ipsum",
-  },
-  {
-    id: "3",
-    name: "Devin Harmon",
-    role: "Super Admin",
-    createdDate: "18 Dec, 2015",
-    email: "Lorem Ipsum",
-  },
-  {
-    id: "4",
-    name: "Lee Harmon",
-    role: "Employee",
-    createdDate: "18 Dec, 2015",
-    email: "Lorem Ipsum",
-  },
-  {
-    id: "5",
-    name: "Lena Page",
-    role: "Admin",
-    createdDate: "8 Oct, 2016",
-    email: "Lorem Ipsum",
-  },
-];
+  const { data: res, isLoading, isSuccess, refetch } = useGetManagersForAdminQuery({
+    pageNumber,
+    pageSize,
+  });
 
-const page = () => {
+  useEffect(() => {
+    refetch();
+  }, [pageNumber, pageSize, refetch]);
+
+  const type1 = res?.data?.type1;
+  const type2 = res?.data?.type2;
+  const added = [type1, type2];
+
+  const data =
+    added.map((item: ManagerResponse) => {
+      return {
+        ...item,
+      };
+    }) || [];
+
   return (
-    <>
-      <Box className="w-full bg-primary-background">
-        <ManagersList data={data} />
-      </Box>
-    </>
+    <Box className="w-full bg-primary-background">
+      <ManagersList
+        data={data}
+        refetchManagers={refetch}
+        totalCount={res?.totalCount || 2}
+        pageSize={pageSize || 2}
+        currentPage={pageNumber || 1}
+        setPageSize={setPageSize}
+        setPageNumber={setPageNumber}
+      />
+    </Box>
   );
 };
 
-export default page;
+export default Page;

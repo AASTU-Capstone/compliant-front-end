@@ -5,7 +5,24 @@ import { useMemo } from "react";
 import { Column } from "react-table";
 import { Data } from "./page";
 
-const RecentComplaints = ({ data }: { data: Data[] }) => {
+
+const RecentComplaintLogs = ({
+  data,
+  totalCount,
+  pageSize,
+  currentPage,
+  setPageSize,
+  setPageNumber,
+  refetchComplaintLogs,
+}: {
+  data: Data[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageNumber: React.Dispatch<React.SetStateAction<number>>;
+  refetchComplaintLogs: () => void;
+}) => {
   const columns: Array<Column<Data>> = useMemo(
     () => [
       {
@@ -16,34 +33,27 @@ const RecentComplaints = ({ data }: { data: Data[] }) => {
         ),
       },
       {
-        Header: "Category",
-        accessor: "category",
-        Cell: ({ value }) => (
-          <span
-            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full`}
-          >
-            {value}
-          </span>
-        ),
-      },
-      {
-        Header: "Status",
-        accessor: "status",
-        Cell: ({ value }) => (
-          <span
-            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full`}
-          >
-            {value}
-          </span>
-        ),
+        Header: "Priority",
+        accessor: "priority",
+        Cell: ({ value }) => {
+          const statusClass =
+            value.toLowerCase() === "high"
+              ? "bg-red-200 text-red-800"
+              : value.toLowerCase() === "medium"
+                ? "bg-blue-200 text-blue-800"
+                : "bg-gray-200 text-gray-800";
+          return (
+            <span
+              className={`py-1 px-5 text-center text-xs leading-5 font-semibold rounded-full ${statusClass}`}
+            >
+              {value}
+            </span>
+          );
+        },
       },
       {
         Header: "Created Date",
-        accessor: "createdDate",
-      },
-      {
-        Header: "Tags",
-        accessor: "tags",
+        accessor: "createdAt",
       },
     ],
     []
@@ -53,13 +63,21 @@ const RecentComplaints = ({ data }: { data: Data[] }) => {
     <Box className="w-full mt-7">
       <Box>
         <Text className="text-xl px-5 py-4 bg-primary-body">
-          Recent Complaints
+          Recent Complaint Logs
         </Text>
       </Box>
 
-      <DataTable columns={columns} data={data} pageSize={5} />
+      <DataTable
+        columns={columns}
+        data={data}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        currentPage={currentPage}
+        setPageSize={setPageSize}
+        setPageNumber={setPageNumber}
+      />
     </Box>
   );
 };
 
-export default RecentComplaints;
+export default RecentComplaintLogs;

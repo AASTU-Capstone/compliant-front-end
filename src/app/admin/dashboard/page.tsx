@@ -1,5 +1,10 @@
+"use client";
 import { Box, Paper, SimpleGrid, Text } from "@mantine/core";
 import RecentComplaints from "./table";
+import { useGetComplaintStatitisticsQuery, useGetCorruptionTrendStatisticsQuery } from "@/lib/redux/features/statistics";
+import { useGetAllComplaintsForAdminQuery } from "@/lib/redux/features/admin";
+import BarGraph from "@/shared/bargraph";
+import { useState, useEffect } from "react";
 
 export interface Data {
   id: string;
@@ -7,71 +12,54 @@ export interface Data {
   category: string;
   status: string;
   tags: string;
-  createdDate: string;
+  createdAt: string;
 }
 
-const data: Data[] = [
-  {
-    id: "1",
-    title: "David Wagner",
-    status: "Resolved",
-    createdDate: "24 Oct, 2015",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "2",
-    title: "Ina Hogan",
-    status: "Inprogress",
-    createdDate: "24 Oct, 2015",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "3",
-    title: "Devin Harmon",
-    status: "Rejected",
-    createdDate: "18 Dec, 2015",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "4",
-    title: "Lena Page",
-    status: "Received",
-    createdDate: "8 Oct, 2016",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "5",
-    title: "Eula Horton",
-    status: "Inprogress",
-    createdDate: "15 Jun, 2017",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "6",
-    title: "Victoria Perez",
-    status: "Inprogress",
-    createdDate: "12 Jan, 2019",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-  {
-    id: "7",
-    title: "Cora Medina",
-    status: "Received",
-    createdDate: "21 July, 2020",
-    tags: "LA2445",
-    category: "Lorem Ipsum",
-  },
-];
-
 const Dashboard = () => {
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const {
+    data: res,
+    isLoading,
+    isSuccess,
+  } = useGetComplaintStatitisticsQuery("");
+  
+  const {
+    data: complaintResponse,
+    isLoading: loading,
+    isSuccess: success,
+    refetch
+  } = useGetAllComplaintsForAdminQuery({
+    pageNumber,
+    pageSize
+  });
+  
+  useEffect(() => {
+    refetch();
+  }, [pageNumber, pageSize, refetch]);
+
+  const complaintData = res?.data;
+  const complaintList =
+    complaintResponse?.data?.map((item: any) => {
+      return {
+        ...item,
+      };
+    }) || [];
+
+  const totalCount = 5;
+  console.log(totalCount)
+  const { data: corruptionResponse, isLoading: corruptionLoading, isSuccess: corruptionSuccess } = useGetCorruptionTrendStatisticsQuery({});
+  
+  const corruptionData = corruptionResponse?.data;
+  const bardata = corruptionData?.map((item: any) => ({
+    name: item.name,
+    mitigatedCount: item.mitigatedCount,
+    totalCount: item.totalCount,
+  }));
+
   return (
-    <Box className="pb-6 w-full bg-primary-background">
+    <Box className="py-6 w-full bg-primarykey-background">
       <SimpleGrid
         className="w-full"
         cols={{ base: 1, sm: 2, lg: 4 }}
@@ -80,26 +68,42 @@ const Dashboard = () => {
       >
         <Paper className="py-4 px-7">
           <Text c="dimmed">Total Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">645</Text>
+          <Text className="font-bold mt-1 text-xl">
+            {complaintData?.totalComplaints || 0}
+          </Text>
         </Paper>
         <Paper className="py-4 px-7">
           <Text c="dimmed">Total Resolved</Text>
-          <Text className="font-bold mt-1 text-xl">124</Text>
+          <Text className="font-bold mt-1 text-xl">
+            {complaintData?.resolvedComplaints || 0}
+          </Text>
         </Paper>
         <Paper className="py-4 px-7">
           <Text c="dimmed">In-Review Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">545</Text>
+          <Text className="font-bold mt-1 text-xl">
+            {complaintData?.pendingComplaints || 0}
+          </Text>
         </Paper>
         <Paper className="py-4 px-7">
           <Text c="dimmed">Rejected Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">100</Text>
+          <Text className="font-bold mt-1 text-xl">
+            {complaintData?.rejectedComplaints || 0}
+          </Text>
         </Paper>
       </SimpleGrid>
 
-      <Box className="h-52 w-full flex justify-center items-center mt-6 bg-gray-200">
-        <h1 className="text-2xl">Some Analytic Data</h1>
+      <Box className="h-32 w-full flex justify-center items-center mt-6 bg-gray-200">
+        <h1 className="text-2xl">Corruption Statistics</h1>
       </Box>
-      <RecentComplaints data={data} />
+      <BarGraph data={bardata} />
+      <RecentComplaints
+        data={complaintList}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        currentPage={pageNumber}
+        setPageSize={setPageSize}
+        setPageNumber={setPageNumber}
+      />
     </Box>
   );
 };
