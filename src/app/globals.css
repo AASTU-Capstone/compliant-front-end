@@ -85,7 +85,7 @@
 
 /* Modern input styles */
 .auth-input {
-  @apply w-full px-4 py-3.5 text-sm bg-white border border-border rounded-xl transition-all duration-200;
+  @apply w-full py-3.5 pr-4 text-sm bg-white border border-border rounded-xl transition-all duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
   @apply placeholder:text-muted-foreground;
 }
