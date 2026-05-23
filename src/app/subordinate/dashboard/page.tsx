@@ -1,16 +1,16 @@
 "use client";
 import {
-  useGetComplaintLogStatisticsQuery,
-  useGetCorruptionTrendStatisticsQuery,
+    useGetComplaintLogStatisticsQuery,
+    useGetCorruptionTrendStatisticsQuery,
 } from "@/lib/redux/features/statistics";
-import jwt from "jsonwebtoken";
 import BarGraph from "@/shared/bargraph";
 import {
-  IconFileText,
-  IconCircleCheck,
-  IconClock,
-  IconChartBar,
+    IconChartBar,
+    IconCircleCheck,
+    IconClock,
+    IconFileText,
 } from "@tabler/icons-react";
+import jwt from "jsonwebtoken";
 
 export interface Data {
   id: string;
@@ -56,7 +56,7 @@ const Dashboard = () => {
   const subordinateId = decodedToken?.userid;
 
   const { data: res } = useGetComplaintLogStatisticsQuery({
-    subordinateId: subordinateId,
+    subordinateId: subordinateId || "",
     managerId: "",
   });
   const complaintData = res?.data;

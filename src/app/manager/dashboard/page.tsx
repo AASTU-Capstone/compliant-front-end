@@ -1,21 +1,21 @@
 "use client";
-import RecentComplaintsLogBody from "./table";
-import {
-  useGetComplaintLogStatisticsQuery,
-  useGetCorruptionTrendStatisticsQuery,
-} from "@/lib/redux/features/statistics";
 import { useGetComplaintLogToUpdateForManagerQuery } from "@/lib/redux/features/manager";
-import { GetComplaintLogToUpdateForManagerResponse } from "@/types";
-import { useState, useEffect } from "react";
-import jwt from "jsonwebtoken";
-import BarGraph from "@/shared/bargraph";
 import {
-  IconFileText,
-  IconCircleCheck,
-  IconClock,
-  IconUserCheck,
-  IconChartBar,
+    useGetComplaintLogStatisticsQuery,
+    useGetCorruptionTrendStatisticsQuery,
+} from "@/lib/redux/features/statistics";
+import BarGraph from "@/shared/bargraph";
+import { GetComplaintLogToUpdateForManagerResponse } from "@/types";
+import {
+    IconChartBar,
+    IconCircleCheck,
+    IconClock,
+    IconFileText,
+    IconUserCheck,
 } from "@tabler/icons-react";
+import jwt from "jsonwebtoken";
+import { useEffect, useState } from "react";
+import RecentComplaintsLogBody from "./table";
 
 export interface Data {
   id: string;
@@ -72,7 +72,7 @@ const Dashboard = () => {
 
   const { data: res } = useGetComplaintLogStatisticsQuery({
     subordinateId: "",
-    managerId: managerId,
+    managerId: managerId || "",
   });
 
   const {

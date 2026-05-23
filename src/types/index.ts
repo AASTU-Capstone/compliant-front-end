@@ -124,7 +124,7 @@ export interface GetSubordinatesResponse {
   id: string;
   name: string;
   email: string;
-  mitigatedCount: Int32Array;
+  mitigatedCount: number;
 }
 
 export interface CreateSubordinateInput {

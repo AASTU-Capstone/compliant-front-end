@@ -1,15 +1,16 @@
 "use client";
-import SubordinatesList from "./table";
 import { useGetSubordinatesQuery, useSearchSubordinatesQuery } from "@/lib/redux/features/manager";
-import { useState, useEffect } from "react";
 import { useWebSocket } from "@/providers/WebSocketContext";
-import { IconSearch, IconFilter, IconUsers } from "@tabler/icons-react";
+import { IconFilter, IconSearch, IconUsers } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import SubordinatesList from "./table";
 
 interface SubordinateData {
   id: string;
   name: string;
   email: string;
   status: string;
+  mitigatedCount: number;
 }
 
 const Page = () => {
@@ -45,12 +46,14 @@ const Page = () => {
     data = searchResponse?.data?.map((item: SubordinateData) => ({
       ...item,
       status: "received",
+      mitigatedCount: item.mitigatedCount || 0,
     })) || [];
     totalCount = searchResponse?.totalCount || 0;
   } else {
     data = res?.data?.map((item: SubordinateData) => ({
       ...item,
       status: "received",
+      mitigatedCount: item.mitigatedCount || 0,
     })) || [];
     totalCount = res?.totalCount || 0;
   }
