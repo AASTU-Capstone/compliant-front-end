@@ -1,170 +1,219 @@
 "use client";
+
 import React, { useState } from "react";
-import { MdOutlinePassword, MdOutlineRemoveRedEye } from "react-icons/md";
-import { FaRegEyeSlash } from "react-icons/fa";
-import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import "react-toastify/dist/ReactToastify.css";
+import jwt from "jsonwebtoken";
 import { toast, ToastContainer } from "react-toastify";
-import jwt  from "jsonwebtoken";
+import "react-toastify/dist/ReactToastify.css";
+import { IconLock, IconEye, IconEyeOff, IconArrowLeft, IconCheck } from "@tabler/icons-react";
 
-type Props = {};
+import { useAuth } from "@/hooks/useAuth";
 
-export default function SignUp({}: Props) {
+export default function ChangePassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState<boolean>(false);
-  const [previousPassword, setPreviousPassword] = useState<string>("");
   const [error, setError] = useState("");
+  
   const {
     resetPasswordHandler,
     auth: { isLoading },
   } = useAuth();
-  var email: string =
+  
+  let email: string =
     typeof window !== "undefined" ? sessionStorage.getItem("email") ?? "" : "";
 
-  if(!email){
+  if (!email) {
     const token = decodeURIComponent(typeof window !== "undefined" ? document.cookie : "")
-    .split(";")
-    .find((c) => c.trim().startsWith("token="))
-    ?.split("=")[1];
+      .split(";")
+      .find((c) => c.trim().startsWith("token="))
+      ?.split("=")[1];
     const decodedToken: any = jwt.decode(token || "");
-    email= decodedToken?.useremail
+    email = decodedToken?.useremail;
   }
+  
   const router = useRouter();
 
   const notify = () => {
-    toast.success("Password Changed Successfully", {
+    toast.success("Password changed successfully", {
       position: "bottom-center",
-      autoClose: 7000,
+      autoClose: 5000,
       hideProgressBar: true,
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
-      progress: undefined,
       theme: "colored",
       style: {
-        color: "#fff",
         backgroundColor: "#3563E9",
-        padding: "0px",
+        borderRadius: "12px",
       },
     });
   };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (
-      newPassword === "" ||
-      newPassword === null ||
-      confirmPassword === "" ||
-      confirmPassword === null
-    ) {
-      setError("Password and Confirm Password are required");
+    
+    if (!newPassword || !confirmPassword) {
+      setError("Both password fields are required");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Password and Confirm Password do not match");
+      setError("Passwords do not match");
       return;
     }
-    if (newPassword === previousPassword) {
-      setError("Password should not be the same as the previous one");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
+    
     setError("");
-    console.log("Password:", newPassword);
+    
     const res = await resetPasswordHandler({ newPassword, email });
-    console.log("res", res);
     if (res && "data" in res && res?.data?.success) {
-      console.log("Password reset successfully");
       notify();
       router.push("/password-updated");
     }
   };
 
-  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewPassword(event.target.value);
+  // Password strength indicators
+  const passwordChecks = {
+    length: newPassword.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword),
+    lowercase: /[a-z]/.test(newPassword),
+    number: /[0-9]/.test(newPassword),
   };
 
-  const handleConfirmPasswordChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setConfirmPassword(event.target.value);
-  };
+  const showPasswordStrength = newPassword.length > 0;
 
   return (
-    <div className="flex justify-center items-center h-full w-full font-[Poppins]">
-      <div className="flex flex-col justify-center items-center gap-4 w-2/3 space-y-3">
-        <h1 className="text-2xl text-center font-roboto text-onSurface capitalize">
-          RESET YOUR PASSWORD
+    <div className="space-y-8">
+      {/* Back Link */}
+      <Link
+        href="/reset-password/verify-otp"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <IconArrowLeft className="w-4 h-4" />
+        Back
+      </Link>
+
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+          Create new password
         </h1>
-        <p className="text-center text-sm text-[#989898] mb-2 px-3">
-          Create a new password. Ensure it differs from previous ones for
-          security.
+        <p className="text-muted-foreground">
+          Your new password must be different from previously used passwords.
         </p>
+      </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="w-full px-4 flex flex-col space-y-4"
-        >
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* New Password Input */}
+        <div className="space-y-2">
+          <label htmlFor="newPassword" className="text-sm font-medium text-foreground">
+            New password
+          </label>
           <div className="relative">
-            <MdOutlinePassword className="text-secondary absolute left-3 top-[12px] text-sm" />
+            <IconLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
+              id="newPassword"
               type={isVisible ? "text" : "password"}
-              placeholder="Password"
-              className="text-xs py-3 border-blue-200 text-secondary leading-4 border w-full outline-none pl-10 rounded-lg  px-3  focus:outline-none focus:ring-1 focus:ring-blue-300"
+              placeholder="Enter new password"
               value={newPassword}
-              onChange={handlePasswordChange}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="auth-input pl-12 pr-12"
             />
-            {isVisible ? (
-              <MdOutlineRemoveRedEye
-                className="text-secondary cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsVisible(!isVisible)}
-              />
-            ) : (
-              <FaRegEyeSlash
-                className="text-secondary cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsVisible(!isVisible)}
-              />
-            )}
-          </div>
-
-          <div className="relative">
-            <MdOutlinePassword className="text-secondary absolute left-3 top-[12px] text-sm" />
-            <input
-              type={isConfirmVisible ? "text" : "password"}
-              placeholder="Confirm Password"
-              className="text-xs py-3 border-blue-200 text-secondary leading-4 border w-full outline-none pl-10 rounded-lg  px-3  focus:outline-none focus:ring-1 focus:ring-blue-300"
-              value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
-            />
-            {isConfirmVisible ? (
-              <MdOutlineRemoveRedEye
-                className="text-secondary cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsConfirmVisible(!isConfirmVisible)}
-              />
-            ) : (
-              <FaRegEyeSlash
-                className="text-secondary cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsConfirmVisible(!isConfirmVisible)}
-              />
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1 justify-center items-center">
-            {/* error message */}
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-
-            {/* Update password button */}
             <button
-              className="bg-primarykey font-roboto text-sm border-transparent py-3 text-white cursor-pointer hover:bg-custom-blue/75 transition duration-150 ease-linear rounded-lg px-8 mx-auto mt-4"
-              type="submit"
+              type="button"
+              onClick={() => setIsVisible(!isVisible)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              Update Password
+              {isVisible ? (
+                <IconEyeOff className="w-5 h-5" />
+              ) : (
+                <IconEye className="w-5 h-5" />
+              )}
             </button>
           </div>
-        </form>
-      </div>
+          
+          {/* Password Strength Indicators */}
+          {showPasswordStrength && (
+            <div className="grid grid-cols-2 gap-2 mt-3 p-3 bg-muted/50 rounded-lg">
+              {[
+                { check: passwordChecks.length, label: "8+ characters" },
+                { check: passwordChecks.uppercase, label: "Uppercase letter" },
+                { check: passwordChecks.lowercase, label: "Lowercase letter" },
+                { check: passwordChecks.number, label: "Number" },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-2 text-xs">
+                  {item.check ? (
+                    <IconCheck className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />
+                  )}
+                  <span className={item.check ? "text-green-600" : "text-muted-foreground"}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Confirm Password Input */}
+        <div className="space-y-2">
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+            Confirm new password
+          </label>
+          <div className="relative">
+            <IconLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              id="confirmPassword"
+              type={isConfirmVisible ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="auth-input pl-12 pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setIsConfirmVisible(!isConfirmVisible)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isConfirmVisible ? (
+                <IconEyeOff className="w-5 h-5" />
+              ) : (
+                <IconEye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="auth-button"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-3">
+              <div className="spinner" />
+              <span>Updating password...</span>
+            </span>
+          ) : (
+            <span>Update password</span>
+          )}
+        </button>
+      </form>
+
+      <ToastContainer />
     </div>
   );
 }

@@ -1,9 +1,22 @@
 "use client";
 import DataTable from "@/shared/table";
-import { Box, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { Column } from "react-table";
 import { Data } from "./page";
+
+const getStatusStyle = (status: string) => {
+  const statusLower = status?.toLowerCase() || "";
+  if (statusLower.includes("resolved") || statusLower.includes("completed")) {
+    return "bg-green-100 text-green-700 border-green-200";
+  }
+  if (statusLower.includes("pending") || statusLower.includes("review")) {
+    return "bg-amber-100 text-amber-700 border-amber-200";
+  }
+  if (statusLower.includes("rejected") || statusLower.includes("closed")) {
+    return "bg-red-100 text-red-700 border-red-200";
+  }
+  return "bg-blue-100 text-blue-700 border-blue-200";
+};
 
 const RecentComplaints = ({
   data,
@@ -12,6 +25,7 @@ const RecentComplaints = ({
   currentPage,
   setPageSize,
   setPageNumber,
+  isLoading,
 }: {
   data: Data[];
   totalCount: number;
@@ -19,6 +33,7 @@ const RecentComplaints = ({
   currentPage: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   setPageNumber: React.Dispatch<React.SetStateAction<number>>;
+  isLoading?: boolean;
 }) => {
   const columns: Array<Column<Data>> = useMemo(
     () => [
@@ -26,16 +41,14 @@ const RecentComplaints = ({
         Header: "Title",
         accessor: "title",
         Cell: ({ value }) => (
-          <div className="text-sm font-medium text-gray-900">{value}</div>
+          <div className="font-medium text-foreground">{value}</div>
         ),
       },
       {
         Header: "Category",
         accessor: "category",
         Cell: ({ value }) => (
-          <span
-            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full`}
-          >
+          <span className="px-3 py-1 text-xs font-medium rounded-full border bg-primary/10 text-primary border-primary/20">
             {value}
           </span>
         ),
@@ -45,7 +58,7 @@ const RecentComplaints = ({
         accessor: "status",
         Cell: ({ value }) => (
           <span
-            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full`}
+            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyle(value)}`}
           >
             {value}
           </span>
@@ -54,27 +67,54 @@ const RecentComplaints = ({
       {
         Header: "Created Date",
         accessor: "createdAt",
+        Cell: ({ value }) => (
+          <span className="text-muted-foreground">
+            {value
+              ? new Date(value).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-"}
+          </span>
+        ),
       },
     ],
     []
   );
 
   return (
-    <Box className="w-full mt-7">
-      <Box>
-        <Text className="text-xl px-5 py-4 bg-primary-body">Recent Complaints</Text>
-      </Box>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Recent Complaints
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Latest complaint submissions across the system
+          </p>
+        </div>
+      </div>
 
-      <DataTable
-        columns={columns}
-        data={data}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        currentPage={currentPage}
-        setPageSize={setPageSize}
-        setPageNumber={setPageNumber}
+      {isLoading ? (
+        <div className="bg-card rounded-xl border border-border p-12 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-muted-foreground">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={data}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          setPageSize={setPageSize}
+          setPageNumber={setPageNumber}
         />
-    </Box>
+      )}
+    </div>
   );
 };
 

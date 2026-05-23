@@ -1,6 +1,5 @@
 import Header from "@/shared/header";
 import Sidebar from "@/shared/sidebar";
-import { Box, Flex } from "@mantine/core";
 import React from "react";
 
 export default function ManagerLayout({
@@ -9,12 +8,16 @@ export default function ManagerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Flex>
+    <div className="flex min-h-screen bg-background">
       <Sidebar role="manager" />
-      <Box className="gap-10 flex flex-col px-10 py-5 w-full bg-primary-background">
-        <Header role="Manager" />
-        {children}
-      </Box>
-    </Flex>
+      <main className="flex-1 flex flex-col">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-8 py-4">
+          <Header role="Manager" />
+        </div>
+        <div className="flex-1 p-8">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }

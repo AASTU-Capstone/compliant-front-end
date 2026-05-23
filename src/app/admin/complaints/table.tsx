@@ -1,27 +1,40 @@
 "use client";
 import DataTable from "@/shared/table";
-import ViewComplaint from "@/shared/view-complaint";
 import {
-  ActionIcon,
-  Box,
   Button,
   Flex,
-  Input,
   Group,
-  Menu,
   Modal,
   Text,
   TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconAdjustmentsHorizontal, IconChevronDown, IconEye, IconSearch, IconSquareCheck, IconSquareX } from "@tabler/icons-react";
-import { use, useEffect, useMemo, useState } from "react";
+import {
+  IconEye,
+  IconCircleCheck,
+  IconCircleX,
+} from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 import { Column } from "react-table";
 import { Data } from "./page";
 import { UpdateComplaintStatusInputForAdmin } from "@/types";
-import { useUpdateComplaintStatusForAdminMutation,useSearchComplaintsQuery } from "@/lib/redux/features/admin";
+import { useUpdateComplaintStatusForAdminMutation } from "@/lib/redux/features/admin";
 import ViewComplaintById from "./viewmodal";
+
+const getStatusStyle = (status: string) => {
+  const statusLower = status?.toLowerCase() || "";
+  if (statusLower === "resolved") {
+    return "bg-green-100 text-green-700 border-green-200";
+  }
+  if (statusLower === "inprogress" || statusLower === "received") {
+    return "bg-blue-100 text-blue-700 border-blue-200";
+  }
+  if (statusLower === "rejected") {
+    return "bg-red-100 text-red-700 border-red-200";
+  }
+  return "bg-gray-100 text-gray-700 border-gray-200";
+};
 
 const Complaints = ({
   data,
@@ -61,10 +74,6 @@ const Complaints = ({
     openViewModal();
   };
 
-  
-
-
-
   const handleAccept = (id: string) => {
     modals.openConfirmModal({
       title: "Accept Complaint",
@@ -100,8 +109,6 @@ const Complaints = ({
       refetchComplaints();
       setReason("");
       setRejectId("");
-      // console.log("are you closing");
-      // console.log("yes i did!!");
     } catch (error) {
       console.error("Failed to reject complaint: ", error);
     }
@@ -110,67 +117,72 @@ const Complaints = ({
   const columns: Array<Column<Data>> = useMemo(
     () => [
       {
-        Header: "Complaints Title",
+        Header: "Title",
         accessor: "title",
         Cell: ({ value }) => (
-          <div className="text-sm font-medium text-gray-900">{value}</div>
+          <div className="font-medium text-foreground">{value}</div>
+        ),
+      },
+      {
+        Header: "Category",
+        accessor: "category",
+        Cell: ({ value }) => (
+          <span className="px-3 py-1 text-xs font-medium rounded-full border bg-primary/10 text-primary border-primary/20">
+            {value}
+          </span>
         ),
       },
       {
         Header: "Status",
         accessor: "status",
-        Cell: ({ value }) => {
-          const statusClass =
-            value === "Resolved"
-              ? "bg-green-200 text-green-800"
-              : value === "Inprogress"
-                ? "bg-blue-200 text-blue-800"
-                : value === "Rejected"
-                  ? "bg-red-200 text-red-800"
-                  : "bg-gray-200 text-gray-800";
-          return (
-            <span
-              className={`py-1 px-5 text-center text-xs leading-5 font-semibold rounded-full ${statusClass}`}
-            >
-              {value}
-            </span>
-          );
-        },
+        Cell: ({ value }) => (
+          <span
+            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyle(value)}`}
+          >
+            {value}
+          </span>
+        ),
       },
       {
         Header: "Created Date",
         accessor: "createdAt",
+        Cell: ({ value }) => (
+          <span className="text-muted-foreground">
+            {value
+              ? new Date(value).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-"}
+          </span>
+        ),
       },
       {
-        Header: "Category",
-        accessor: "category",
-      },
-      {
-        Header: "Action",
+        Header: "Actions",
         Cell: ({ row }) => (
-          <div className="flex space-x-4">
-            <ActionIcon
-              variant="light"
+          <div className="flex items-center gap-2">
+            <button
               onClick={() => prepareViewModel(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-200"
+              title="View"
             >
-              <IconEye className="w-5 h-5" />
-            </ActionIcon>
-
-            <ActionIcon
-              variant="light"
+              <IconEye size={18} />
+            </button>
+            <button
               onClick={() => handleAccept(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-100 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-200"
+              title="Accept"
             >
-              <IconSquareCheck color="green" className="w-5 h-5" />
-            </ActionIcon>
-            <ActionIcon
-              variant="light"
+              <IconCircleCheck size={18} />
+            </button>
+            <button
               onClick={() => prepareHandleReject(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all duration-200"
+              title="Reject"
             >
-              <IconSquareX color="red" className="w-5 h-5" />
-            </ActionIcon>
+              <IconCircleX size={18} />
+            </button>
           </div>
         ),
       },
@@ -185,11 +197,24 @@ const Complaints = ({
         opened={opened}
         onClose={closeReject}
         title="Reject Complaint"
+        styles={{
+          header: {
+            backgroundColor: "var(--color-background)",
+            borderBottom: "1px solid var(--color-border)",
+          },
+          body: {
+            backgroundColor: "var(--color-background)",
+          },
+          title: {
+            fontWeight: 600,
+          },
+        }}
       >
         <Flex className="flex-col my-5 gap-7">
           <div>
-            <Text size="sm">
-              Are you sure you want to Reject this complaint?
+            <Text size="sm" className="text-muted-foreground">
+              Are you sure you want to reject this complaint? Please provide a
+              reason.
             </Text>
           </div>
           <div>
@@ -201,49 +226,51 @@ const Complaints = ({
                 setReason(event.currentTarget.value);
                 setIsRejectDisabled(event.currentTarget.value.trim() === "");
               }}
+              classNames={{
+                input:
+                  "border-border focus:border-primary focus:ring-primary/20",
+              }}
             />
           </div>
         </Flex>
-        <Group justify="end">
+        <Group justify="end" gap="sm">
+          <Button
+            variant="light"
+            onClick={closeReject}
+            className="bg-muted text-foreground hover:bg-muted/80"
+          >
+            Cancel
+          </Button>
           <Button
             onClick={handleReject}
             loading={isRejecting}
             disabled={isRejectDisabled}
-            style={{
-              backgroundColor: isRejectDisabled ? "white" : "red",
-              color: isRejectDisabled ? "black" : "white",
-              border: isRejectDisabled ? "1px solid black" : "1px solid red",
-            }}
+            className={
+              isRejectDisabled
+                ? "bg-muted text-muted-foreground"
+                : "bg-red-500 hover:bg-red-600 text-white"
+            }
           >
             Reject Complaint
-          </Button>
-          <Button variant="light" onClick={closeReject}>
-            Cancel
           </Button>
         </Group>
       </Modal>
 
-      <Box className="w-full bg-primary-body">
-        <Box className="px-2 py-5">
-          <Text className="text-xl">Complaints</Text>
-        </Box>
-
-        <DataTable
-          columns={columns}
-          data={data}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          setPageSize={setPageSize}
-          setPageNumber={setPageNumber}
-        />
-        <ViewComplaintById
-          id={viewId}
-          openViewModal={openViewModal}
-          closeViewModal={closeViewModal}
-          isViewModalOpened={isViewModalOpened}
-        />
-      </Box>
+      <DataTable
+        columns={columns}
+        data={data}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        currentPage={currentPage}
+        setPageSize={setPageSize}
+        setPageNumber={setPageNumber}
+      />
+      <ViewComplaintById
+        id={viewId}
+        openViewModal={openViewModal}
+        closeViewModal={closeViewModal}
+        isViewModalOpened={isViewModalOpened}
+      />
     </>
   );
 };

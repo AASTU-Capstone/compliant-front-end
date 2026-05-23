@@ -1,10 +1,8 @@
 "use client";
 import RecentComplaints from "./table";
-import { Box, Button, Flex, Input, Menu, Text } from "@mantine/core";
 import { useGetComplaintLogsToUpdateForSubordinateQuery } from "@/lib/redux/features/subordinate";
-import { IconAdjustmentsHorizontal, IconChevronDown, IconSearch } from "@tabler/icons-react";
+import { IconSearch, IconFilter } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
-import { useDisclosure } from "@mantine/hooks";
 import { useSearchComplaintLogQuery } from "@/lib/redux/features/complaintLog";
 
 export interface Data {
@@ -18,71 +16,102 @@ export interface Data {
 const ComplaintsLog = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  
+
   const {
     data: res,
     isLoading,
-    isSuccess,
     refetch,
   } = useGetComplaintLogsToUpdateForSubordinateQuery({
     pageNumber,
-    pageSize
+    pageSize,
   });
 
   useEffect(() => {
     refetch();
   }, [pageNumber, pageSize, refetch]);
 
-  //search keyword
-  const [searchKeyword, setSearchKeyword] = useState("")
-  const { data: searchResponse,isSuccess:searchSuccess, refetch:searchRefetch } = 
-  useSearchComplaintLogQuery({keyword:searchKeyword,status:"processing",pageNumber,pageSize}, {
-    skip: !searchKeyword,
-  });
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const { data: searchResponse, isSuccess: searchSuccess, refetch: searchRefetch } =
+    useSearchComplaintLogQuery(
+      { keyword: searchKeyword, status: "processing", pageNumber, pageSize },
+      { skip: !searchKeyword }
+    );
+
   useEffect(() => {
     if (searchKeyword) {
       searchRefetch();
     }
   }, [searchKeyword, searchRefetch]);
 
-  var totalCount = 0;
-  var data = []
-  if(searchKeyword && searchSuccess){
-    data = searchResponse?.data.map((item: any) => ({ ...item, status: "received" })) || [];
+  let totalCount = 0;
+  let data = [];
+  if (searchKeyword && searchSuccess) {
+    data = searchResponse?.data?.map((item: Data) => ({
+      ...item,
+      status: "received",
+    })) || [];
     totalCount = searchResponse?.totalCount || 0;
-    console.log(totalCount)
-  }else{
-    data = res?.data.map((item: any) => ({ ...item, status: "received" })) || [];
+  } else {
+    data = res?.data?.map((item: Data) => ({
+      ...item,
+      status: "received",
+    })) || [];
     totalCount = res?.totalCount || 0;
   }
 
   return (
-    <Box className="w-full bg-primary-background">
-      {/* <Text className="text-primary-default font-bold text-2xl mb-5">
-        Complaint Logs
-      </Text> */}
-      <Flex className="gap-3 items-center">
-        <Input
-          placeholder="Search"
-          radius="md"
-          w={350}
-          leftSection={<IconSearch />}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-        />
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Complaint Logs</h1>
+        <p className="text-muted-foreground mt-1">
+          View and manage assigned complaint logs
+        </p>
+      </div>
 
-        <Button>Search</Button>
-          
-      </Flex>
-      <RecentComplaints
-        data={data}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        currentPage={pageNumber}
-        setPageSize={setPageSize}
-        setPageNumber={setPageNumber}
-        refetchComplaintLogs={refetch}
-      />
-    </Box>
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1 max-w-md">
+          <IconSearch
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search complaint logs..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+        <button className="flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors">
+          <IconFilter size={18} />
+          <span>Filter</span>
+        </button>
+      </div>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="bg-card rounded-xl border border-border p-12 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-muted-foreground">
+              Loading complaint logs...
+            </span>
+          </div>
+        </div>
+      ) : (
+        <RecentComplaints
+          data={data}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={pageNumber}
+          setPageSize={setPageSize}
+          setPageNumber={setPageNumber}
+          refetchComplaintLogs={refetch}
+        />
+      )}
+    </div>
   );
 };
 

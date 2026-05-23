@@ -1,10 +1,19 @@
 "use client";
-import { Box, Paper, SimpleGrid, Text } from "@mantine/core";
 import RecentComplaints from "./table";
-import { useGetComplaintStatitisticsQuery, useGetCorruptionTrendStatisticsQuery } from "@/lib/redux/features/statistics";
+import {
+  useGetComplaintStatitisticsQuery,
+  useGetCorruptionTrendStatisticsQuery,
+} from "@/lib/redux/features/statistics";
 import { useGetAllComplaintsForAdminQuery } from "@/lib/redux/features/admin";
 import BarGraph from "@/shared/bargraph";
 import { useState, useEffect } from "react";
+import {
+  IconFileText,
+  IconCircleCheck,
+  IconClock,
+  IconCircleX,
+  IconChartBar,
+} from "@tabler/icons-react";
 
 export interface Data {
   id: string;
@@ -15,87 +24,131 @@ export interface Data {
   createdAt: string;
 }
 
+const statCards = [
+  {
+    key: "totalComplaints",
+    label: "Total Complaints",
+    icon: IconFileText,
+    color: "bg-blue-500",
+    lightColor: "bg-blue-50",
+    textColor: "text-blue-600",
+  },
+  {
+    key: "resolvedComplaints",
+    label: "Resolved",
+    icon: IconCircleCheck,
+    color: "bg-green-500",
+    lightColor: "bg-green-50",
+    textColor: "text-green-600",
+  },
+  {
+    key: "pendingComplaints",
+    label: "In Review",
+    icon: IconClock,
+    color: "bg-amber-500",
+    lightColor: "bg-amber-50",
+    textColor: "text-amber-600",
+  },
+  {
+    key: "rejectedComplaints",
+    label: "Rejected",
+    icon: IconCircleX,
+    color: "bg-red-500",
+    lightColor: "bg-red-50",
+    textColor: "text-red-600",
+  },
+];
+
 const Dashboard = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  const {
-    data: res,
-    isLoading,
-    isSuccess,
-  } = useGetComplaintStatitisticsQuery("");
-  
+  const { data: res } = useGetComplaintStatitisticsQuery("");
+
   const {
     data: complaintResponse,
-    isLoading: loading,
-    isSuccess: success,
-    refetch
+    isLoading,
+    refetch,
   } = useGetAllComplaintsForAdminQuery({
     pageNumber,
-    pageSize
+    pageSize,
   });
-  
+
   useEffect(() => {
     refetch();
   }, [pageNumber, pageSize, refetch]);
 
   const complaintData = res?.data;
   const complaintList =
-    complaintResponse?.data?.map((item: any) => {
-      return {
-        ...item,
-      };
-    }) || [];
+    complaintResponse?.data?.map((item: Data) => ({
+      ...item,
+    })) || [];
 
-  const totalCount = 5;
-  console.log(totalCount)
-  const { data: corruptionResponse, isLoading: corruptionLoading, isSuccess: corruptionSuccess } = useGetCorruptionTrendStatisticsQuery({});
-  
+  const totalCount = complaintResponse?.totalCount || 5;
+
+  const { data: corruptionResponse } = useGetCorruptionTrendStatisticsQuery({});
+
   const corruptionData = corruptionResponse?.data;
-  const bardata = corruptionData?.map((item: any) => ({
-    name: item.name,
-    mitigatedCount: item.mitigatedCount,
-    totalCount: item.totalCount,
-  }));
+  const bardata = corruptionData?.map(
+    (item: { name: string; mitigatedCount: number; totalCount: number }) => ({
+      name: item.name,
+      mitigatedCount: item.mitigatedCount,
+      totalCount: item.totalCount,
+    })
+  );
 
   return (
-    <Box className="py-6 w-full bg-primarykey-background">
-      <SimpleGrid
-        className="w-full"
-        cols={{ base: 1, sm: 2, lg: 4 }}
-        spacing={{ base: 8, sm: "lg" }}
-        verticalSpacing={{ base: "md", sm: "xl" }}
-      >
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Total Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">
-            {complaintData?.totalComplaints || 0}
-          </Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Total Resolved</Text>
-          <Text className="font-bold mt-1 text-xl">
-            {complaintData?.resolvedComplaints || 0}
-          </Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">In-Review Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">
-            {complaintData?.pendingComplaints || 0}
-          </Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Rejected Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">
-            {complaintData?.rejectedComplaints || 0}
-          </Text>
-        </Paper>
-      </SimpleGrid>
+    <div className="space-y-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          const value =
+            complaintData?.[stat.key as keyof typeof complaintData] || 0;
+          return (
+            <div
+              key={stat.key}
+              className="bg-card rounded-xl border border-border p-6 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground mt-2">
+                    {value}
+                  </p>
+                </div>
+                <div className={`${stat.lightColor} p-3 rounded-xl`}>
+                  <Icon className={`w-6 h-6 ${stat.textColor}`} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-      <Box className="h-32 w-full flex justify-center items-center mt-6 bg-gray-200">
-        <h1 className="text-2xl">Corruption Statistics</h1>
-      </Box>
-      <BarGraph data={bardata} />
+      {/* Corruption Statistics Chart */}
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <IconChartBar className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Corruption Statistics
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Overview of reported vs mitigated cases
+            </p>
+          </div>
+        </div>
+        <div className="p-6">
+          <BarGraph data={bardata || []} />
+        </div>
+      </div>
+
+      {/* Recent Complaints */}
       <RecentComplaints
         data={complaintList}
         totalCount={totalCount}
@@ -103,8 +156,9 @@ const Dashboard = () => {
         currentPage={pageNumber}
         setPageSize={setPageSize}
         setPageNumber={setPageNumber}
+        isLoading={isLoading}
       />
-    </Box>
+    </div>
   );
 };
 

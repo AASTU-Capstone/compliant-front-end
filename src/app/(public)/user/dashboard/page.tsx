@@ -1,10 +1,15 @@
 "use client";
-import { Box, SimpleGrid, Paper, Text } from "@mantine/core";
 import RecentComplaints from "./table";
 import { useGetComplaintStatitisticsQuery } from "@/lib/redux/features/statistics";
 import { useGetComplaintsQuery } from "@/lib/redux/features/user";
 import jwt from "jsonwebtoken";
 import { useState } from "react";
+import {
+  IconFileText,
+  IconCircleCheck,
+  IconClock,
+  IconCircleX,
+} from "@tabler/icons-react";
 
 export interface Data {
   id: string;
@@ -15,65 +20,116 @@ export interface Data {
   createdAt: string;
 }
 
+const statCards = [
+  {
+    key: "totalComplaints",
+    label: "Total Complaints",
+    icon: IconFileText,
+    color: "bg-blue-500",
+    lightColor: "bg-blue-50",
+    textColor: "text-blue-600",
+  },
+  {
+    key: "resolvedComplaints",
+    label: "Resolved",
+    icon: IconCircleCheck,
+    color: "bg-green-500",
+    lightColor: "bg-green-50",
+    textColor: "text-green-600",
+  },
+  {
+    key: "pendingComplaints",
+    label: "In Review",
+    icon: IconClock,
+    color: "bg-amber-500",
+    lightColor: "bg-amber-50",
+    textColor: "text-amber-600",
+  },
+  {
+    key: "rejectedComplaints",
+    label: "Rejected",
+    icon: IconCircleX,
+    color: "bg-red-500",
+    lightColor: "bg-red-50",
+    textColor: "text-red-600",
+  },
+];
+
 const Dashboard = () => {
-  const token = decodeURIComponent(typeof window !== "undefined" ? document.cookie : "")
+  const token = decodeURIComponent(
+    typeof window !== "undefined" ? document.cookie : ""
+  )
     .split(";")
     .find((c) => c.trim().startsWith("token="))
     ?.split("=")[1];
-  const decodedToken: any = jwt.decode(token || "");
-  const userId = decodedToken.userid;
+  const decodedToken: { userid?: string } | null = jwt.decode(token || "") as { userid?: string } | null;
+  const userId = decodedToken?.userid || "";
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  const { data: res, isLoading, isSuccess } = useGetComplaintStatitisticsQuery(userId);
-  const { data: complaintResponse, isLoading: loading, isSuccess: success } = useGetComplaintsQuery({pageNumber, pageSize});
+  const { data: res } = useGetComplaintStatitisticsQuery(userId);
+  const { data: complaintResponse, isLoading, isSuccess } = useGetComplaintsQuery({
+    pageNumber,
+    pageSize,
+  });
 
   const complaintData = res?.data;
 
-  
-  const complaintList = complaintResponse?.data?.map((item: any) => {
-    return {
-      ...item,
-    };
-  }) || [];
+  const complaintList =
+    complaintResponse?.data?.map((item: Data) => {
+      return {
+        ...item,
+      };
+    }) || [];
 
-  const totalCount = 5;
+  const totalCount = complaintResponse?.totalCount || 5;
 
   return (
-    <Box className="py-6 w-full bg-primarykey-background">
-      <SimpleGrid
-        className="w-full"
-        cols={{ base: 1, sm: 2, lg: 4 }}
-        spacing={{ base: 8, sm: "lg" }}
-        verticalSpacing={{ base: "md", sm: "xl" }}
-      >
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Total Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">{complaintData?.totalComplaints || 0}</Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Total Resolved</Text>
-          <Text className="font-bold mt-1 text-xl">{complaintData?.resolvedComplaints || 0}</Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">In-Review Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">{complaintData?.pendingComplaints || 0}</Text>
-        </Paper>
-        <Paper className="py-4 px-7">
-          <Text c="dimmed">Rejected Complaints</Text>
-          <Text className="font-bold mt-1 text-xl">{complaintData?.rejectedComplaints || 0}</Text>
-        </Paper>
-      </SimpleGrid>
+    <div className="space-y-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          const value =
+            complaintData?.[stat.key as keyof typeof complaintData] || 0;
+          return (
+            <div
+              key={stat.key}
+              className="bg-card rounded-xl border border-border p-6 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground mt-2">
+                    {value}
+                  </p>
+                </div>
+                <div
+                  className={`${stat.lightColor} p-3 rounded-xl`}
+                >
+                  <Icon className={`w-6 h-6 ${stat.textColor}`} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-      <RecentComplaints
-        data={complaintList}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        currentPage={pageNumber}
-        setPageSize={setPageSize}
-        setPageNumber={setPageNumber}
-      />
-    </Box>
+      {/* Recent Complaints Table */}
+      <div>
+        <RecentComplaints
+          data={complaintList}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={pageNumber}
+          setPageSize={setPageSize}
+          setPageNumber={setPageNumber}
+          isLoading={isLoading}
+        />
+      </div>
+    </div>
   );
 };
 

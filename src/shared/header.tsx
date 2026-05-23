@@ -1,15 +1,16 @@
 "use client";
 import {
-  ActionIcon,
   Avatar,
-  Box,
   Divider,
-  Flex,
   Menu,
-  Text,
 } from "@mantine/core";
-import Badge from "@mui/material/Badge";
-import { IconBell, IconChevronDown } from "@tabler/icons-react";
+import {
+  IconBell,
+  IconChevronDown,
+  IconLogout,
+  IconKey,
+  IconSearch,
+} from "@tabler/icons-react";
 import { useGetAdminProfileQuery } from "@/lib/redux/features/admin";
 import { useGetManagerProfileQuery } from "@/lib/redux/features/manager";
 import { useGetSubordinateProfileQuery } from "@/lib/redux/features/subordinate";
@@ -18,7 +19,6 @@ import jwt from "jsonwebtoken";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/router";
 import { useWebSocket } from "@/providers/WebSocketContext";
 import NotificationArea from "@/shared/notificationArea";
 import {
@@ -53,7 +53,7 @@ const notify = () => {
   });
 };
 
-const addThreeHours = (date: any) => {
+const addThreeHours = (date: Date) => {
   const newDate = new Date(date);
   newDate.setHours(newDate.getHours() + 3);
   return newDate;
@@ -69,13 +69,10 @@ const Header = ({ role }: { role: string }) => {
 
   const handleSignOut = () => {
     logoutHandler();
-    // setNotifications([]);
-    // refetch();
     logout();
     notify();
   };
 
-  const notification = true;
   const token = decodeURIComponent(
     typeof window !== "undefined" ? document.cookie : ""
   )
@@ -83,7 +80,7 @@ const Header = ({ role }: { role: string }) => {
     .find((c) => c.trim().startsWith("token="))
     ?.split("=")[1];
 
-  const decodedToken: any = jwt.decode(token || "");
+  const decodedToken: { useremail?: string; typ?: string } | null = jwt.decode(token || "") as { useremail?: string; typ?: string } | null;
   const usernameFromEmail = decodedToken?.useremail?.split("@")[0];
   const usertype = decodedToken?.typ;
 
@@ -108,12 +105,7 @@ const Header = ({ role }: { role: string }) => {
   // notification setup
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const {
-    data: res,
-    isLoading,
-    isSuccess,
-    refetch,
-  } = useGetUnreadNotificationsQuery({});
+  const { data: res } = useGetUnreadNotificationsQuery({});
 
   useEffect(() => {
     const UnreadNotification =
@@ -129,7 +121,6 @@ const Header = ({ role }: { role: string }) => {
 
   useEffect(() => {
     if (messages.length > 0) {
-      console.log("Received", messages);
       const sortedMessages = messages.map((item: Notification) => ({
         ...item,
       }));
@@ -141,7 +132,7 @@ const Header = ({ role }: { role: string }) => {
       );
       clear();
     }
-  }, [messages]);
+  }, [messages, clear]);
 
   const toggleNotifications = () => {
     setShowNotifications((prev) => !prev);
@@ -169,92 +160,115 @@ const Header = ({ role }: { role: string }) => {
       if (unreadNotificationIds.length > 0) {
         markNotifications({ notificationIds: unreadNotificationIds }).unwrap();
         setUnreadNotificationIds([]);
-        // refetch();
       }
       document.removeEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showNotifications, unreadNotificationIds]);
+  }, [showNotifications, unreadNotificationIds, markNotifications]);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
-    <header>
-      <Flex className="justify-between w-full">
-        <Box>
-          <Text className="font-bold">Hello, {firstName || "John"}</Text>
-          <Text c="dimmed" className="text-sm">
-            Have a nice day
-          </Text>
-        </Box>
-        <Flex
-          className="items-center gap-3 justify-center relative"
-          ref={notificationRef}
-        >
-          <ActionIcon
+    <header className="flex items-center justify-between w-full py-2">
+      {/* Left: Greeting */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">
+          {getGreeting()}, {firstName || "User"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Welcome to your {role.toLowerCase()} dashboard
+        </p>
+      </div>
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-3" ref={notificationRef}>
+        {/* Search Button */}
+        <button className="flex items-center justify-center w-10 h-10 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-200">
+          <IconSearch size={18} />
+        </button>
+
+        {/* Notification Button */}
+        <div className="relative">
+          <button
             onClick={toggleNotifications}
-            size="lg"
-            style={{
-              color: "#757575",
-              backgroundColor: "#fff",
-              borderRadius: "50%",
-              position: "relative",
-            }}
+            className="flex items-center justify-center w-10 h-10 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-200"
           >
-            <IconBell />
-          </ActionIcon>
-          {!showNotifications &&
-            notifications.some((notification) => !notification.isRead) && (
-              <Badge
-                badgeContent={
-                  notifications.filter((notification) => !notification.isRead)
-                    .length
-                }
-                color="primary"
-                style={{ position: "relative", top: -12, right: 12 }}
-              ></Badge>
-            )}
+            <IconBell size={18} />
+          </button>
+          {!showNotifications && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
           {showNotifications && (
             <NotificationArea
               notifications={notifications}
               onNotificationRead={handleNotificationRead}
             />
           )}
-          <Divider orientation="vertical" />
-          <Flex className="items-center gap-3 justify-center">
-            <Avatar />
-            <Box>
-              <Text>{username || "John Doe"}</Text>
-              <Text c="dimmed" className="text-sm">
-                {role}
-              </Text>
-            </Box>
-            <Menu width={200} shadow="md">
-              <Menu.Target>
-                <IconChevronDown className="cursor-pointer icon-hover" />
-              </Menu.Target>
+        </div>
 
-              <Menu.Dropdown>
-                <Menu.Item
-                  component={Link}
-                  href="/reset-password/change"
-                  className="text-inherit hover:text-white hover:bg-blue-400"
-                >
-                  <Text className="">Reset Password</Text>
-                </Menu.Item>
-                <Menu.Item
-                  component={Link}
-                  href="/login"
-                  className="text-inherit hover:text-white hover:bg-red-500"
-                  onClick={handleSignOut}
-                >
-                  <Text className="">Log out</Text>
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Flex>
-        </Flex>
-      </Flex>
+        {/* Divider */}
+        <Divider orientation="vertical" className="h-8 mx-1" />
+
+        {/* User Profile Menu */}
+        <Menu width={200} shadow="lg" position="bottom-end" offset={8}>
+          <Menu.Target>
+            <button className="flex items-center gap-3 px-3 py-2 bg-card border border-border rounded-xl hover:border-primary/30 transition-all duration-200 cursor-pointer">
+              <Avatar
+                size="sm"
+                radius="md"
+                color="blue"
+                className="ring-2 ring-primary/20"
+              >
+                {firstName?.charAt(0)?.toUpperCase() || "U"}
+              </Avatar>
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-medium text-foreground leading-tight">
+                  {username || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {role}
+                </p>
+              </div>
+              <IconChevronDown
+                size={16}
+                className="text-muted-foreground ml-1"
+              />
+            </button>
+          </Menu.Target>
+
+          <Menu.Dropdown className="border border-border bg-card">
+            <Menu.Item
+              component={Link}
+              href="/reset-password/change"
+              leftSection={<IconKey size={16} />}
+              className="text-foreground hover:bg-muted"
+            >
+              Reset Password
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+              component={Link}
+              href="/login"
+              onClick={handleSignOut}
+              leftSection={<IconLogout size={16} />}
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              Log out
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
     </header>
   );
 };

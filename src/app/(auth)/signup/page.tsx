@@ -1,272 +1,32 @@
-// "use client";
-
-// import { useState } from "react";
-// import { MdOutlinePassword, MdOutlineRemoveRedEye } from "react-icons/md";
-// import { FcGoogle } from "react-icons/fc";
-// import { FaRegEyeSlash, FaLinkedin } from "react-icons/fa";
-// import { AiOutlineMail } from "react-icons/ai";
-// import Link from "next/link";
-// import { useAuth } from "@/hooks/useAuth";
-// import { useRouter } from "next/navigation";
-// import { useDispatch } from "react-redux";
-// import { getAuth } from "firebase/auth";
-// import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-// import { toast } from "react-toastify";
-// import Image from "next/image";
-// import { resetAuth } from "@/lib/redux/slices/authSlice";
-// import { useFormik } from "formik";
-// import { SignUpValidation } from "@/utils/schema";
-
-// const notify = () => {
-//   toast.success("OTP sent, check your email", {
-//     position: "bottom-center",
-//     autoClose: 7000,
-//     hideProgressBar: true,
-//     closeOnClick: true,
-//     pauseOnHover: true,
-//     draggable: true,
-//     progress: undefined,
-//     theme: "colored",
-//     style: {
-//       color: "#fff",
-//       backgroundColor: "#3563E9",
-//       padding: "0px",
-//     },
-//   });
-// };
-// export default function SignUp() {
-//   const [isVisible, setIsVisible] = useState<boolean>(false);
-//   const [isConfirmVisible, setIsConfirmVisible] = useState<boolean>(false);
-//   const {
-//     signupHandler,
-//     auth: { isAuthenticated, isLoading, error },
-//   } = useAuth();
-//   const [Email, setEmail] = useState<string>("");
-
-//   const { values, errors, touched, handleSubmit, handleChange } = useFormik({
-//     initialValues: {
-//       email: "",
-//       password: "",
-//       confirmPassword: "",
-//     },
-//     validationSchema: SignUpValidation,
-//     validateOnChange: true,
-//     onSubmit: async (values, actions) => {
-//       if (values.email && values.password) {
-//         const credentials = {
-//           email: values.email,
-//           password: values.password,
-//           user_Type: "user",
-//         };
-//         const res = await signupHandler(credentials);
-//         if (res && "data" in res) {
-//           if (!res.data.success) {
-//           }
-//           if (res.data.success) {
-//             notify();
-//             router.push(`/signup/verify-otp?email=${values.email}`);
-//           } else {
-//             toast.error(res.data.error as any);
-//           }
-//         }
-//         actions.resetForm();
-//       } else {
-//         toast.error("All fields are required");
-//       }
-//     },
-//   });
-
-//   const router = useRouter();
-//   const dispatch = useDispatch();
-
-//   return (
-//     <div className="h-full w-full flex items-center justify-center font-[Poppins]">
-//       <div className="w-2/3 gap-4">
-//         <h1 className="text-2xl text-center font-roboto pb-4 text-black  mb-3">
-//           CREATE ACCOUNT
-//         </h1>
-//         {error && error.data && (
-//           <div className="w-full border border-red-600/50 text-red-600 rounded-lg py-2.5 text-sm font-light flex items-center space-x-3 mb-3 pl-3">
-//             <Image
-//               src="/images/sign-error.svg"
-//               width={20}
-//               height={20}
-//               alt="error sign"
-//               className="object-contain cursor-pointer"
-//               onClick={() => dispatch(resetAuth())}
-//             />
-
-//             <p>
-//               {error?.status === "FETCH_ERROR"
-//                 ? "Network Error"
-//                 : error?.data.error}
-//             </p>
-//           </div>
-//         )}
-//         {/* Signup Form */}
-//         <form
-//           onSubmit={handleSubmit}
-//           className="flex flex-col space-y-2 mb-3 text-secondary"
-//           noValidate
-//         >
-//           {/* Email */}
-
-//           <div className="relative">
-//             <AiOutlineMail className="absolute left-3 top-[14px] font-light text-sm" />
-//             <input
-//               type="email"
-//               value={values.email}
-//               onChange={handleChange("email")}
-//               placeholder="Your Email"
-//               className={`text-xs py-3 leading-4 border border-blue-200 w-full pl-10 rounded-lg  px-3  focus:outline-none focus:ring-1 focus:ring-blue-300 ${
-//                 errors.email && touched.email && "border-red-500"
-//               } `}
-//             />
-//             {/* error message */}
-//             {errors.email && touched.email && (
-//               <p className="text-red-500 text-12 font-light">{errors.email}</p>
-//             )}
-//           </div>
-
-//           {/* Password */}
-//           <div className="relative">
-//             <MdOutlinePassword className="absolute left-3 top-[12px] font-light text-sm" />
-//             <input
-//               type={isVisible ? "text" : "password"}
-//               value={values.password}
-//               onChange={handleChange("password")}
-//               placeholder="Password"
-//               className={`text-xs py-3 border-blue-200 leading-4 border w-full outline-none pl-10 rounded-lg px-3  focus:outline-none focus:ring-1 focus:ring-blue-300 ${
-//                 errors.password && touched.password && "border-red-500"
-//               } `}
-//             />
-//             {isVisible ? (
-//               <MdOutlineRemoveRedEye
-//                 name="password"
-//                 className="cursor-pointer absolute top-3 right-[15px] text-sm"
-//                 onClick={() => setIsVisible(false)}
-//               />
-//             ) : (
-//               <FaRegEyeSlash
-//                 className="absolute top-3 cursor-pointer right-[15px] text-sm"
-//                 onClick={() => setIsVisible(true)}
-//               />
-//             )}
-//             {/* error message */}
-//             {errors.password && touched.password && (
-//               <p className="text-red-500 text-12 font-light">
-//                 {errors.password}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* confirm password */}
-//           <div className="relative">
-//             <MdOutlinePassword className="absolute left-3 top-[12px] font-light text-sm" />
-//             <input
-//               type={isConfirmVisible ? "text" : "password"}
-//               value={values.confirmPassword}
-//               onChange={handleChange("confirmPassword")}
-//               placeholder="Confirm Password"
-//               className={`text-xs border-blue-200 py-3 leading-4 border w-full outline-none pl-10 rounded-lg px-3  focus:outline-none focus:ring-1 focus:ring-blue-00 ${
-//                 errors.confirmPassword &&
-//                 touched.confirmPassword &&
-//                 "border-red-500"
-//               } `}
-//             />
-//             {isConfirmVisible ? (
-//               <MdOutlineRemoveRedEye
-//                 className="cursor-pointer absolute top-3 right-[15px] text-sm"
-//                 onClick={() => setIsConfirmVisible(false)}
-//               />
-//             ) : (
-//               <FaRegEyeSlash
-//                 className="absolute top-3 cursor-pointer right-[15px] text-sm"
-//                 onClick={() => setIsConfirmVisible(true)}
-//               />
-//             )}
-//             {/* error message */}
-//             {errors.confirmPassword && touched.confirmPassword && (
-//               <p className="text-red-500 text-12 font-light">
-//                 {errors.confirmPassword}
-//               </p>
-//             )}
-//           </div>
-
-//           <button
-//             className="bg-[#3563E9] font-medium text-lg border-transparent py-2 text-white cursor-pointer hover:bg-custom-blue/75 transition duration-150 ease-linear rounded-lg my-3"
-//             type="submit"
-//             disabled={isLoading}
-//           >
-//             {isLoading ? (
-//               <div className="flex items-center justify-center gap-x-3 bg-transparent">
-//                 <div className="spinner"></div>
-//                 <span>Processing . . .</span>
-//               </div>
-//             ) : (
-//               <span>Create Account</span>
-//             )}
-//           </button>
-//         </form>
-//         <div className="flex flex-row items-center w-full my-4 mx-auto">
-//           <div className="flex-grow bg-gray-600/25 h-[1px] "></div>
-//           <div className="px-5 text-gray-600 ">or</div>
-//           <div className="flex-grow bg-gray-600/25 h-[1px] "></div>
-//         </div>
-//         <div className="gap-y-4 pt-2">
-//           <button className=" py-2  text-white w-full flex justify-center items-center border-none cursor-pointer hover:bg-background rounded-3xl">
-//             <div className="flex flex-row items-center">
-//               <FcGoogle className="m-1 mx-5 text-base" />
-//               <span className="pr-2 text-gray-900 text-sm font-medium">
-//                 Continue with Google
-//               </span>
-//             </div>
-//           </button>
-//         </div>
-//         <div className="text-center pt-2 mt-3">
-//           <div className="text-12 flex justify-center items-center">
-//             <p className="text-black">I have an account?</p>
-//             <Link href="/login" className=" font-medium pl-2">
-//               <span className="text-blue-500 hover:underline">Sign in</span>
-//             </Link>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useState } from "react";
-import { MdOutlinePassword, MdOutlineRemoveRedEye } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
-import { FaRegEyeSlash } from "react-icons/fa";
-import { AiOutlineMail } from "react-icons/ai";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
-import Image from "next/image";
-import { resetAuth } from "@/lib/redux/slices/authSlice";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useFormik } from "formik";
+import { IconMail, IconLock, IconEye, IconEyeOff, IconCheck, IconX } from "@tabler/icons-react";
+import { FcGoogle } from "react-icons/fc";
+
+import { useAuth } from "@/hooks/useAuth";
+import { resetAuth } from "@/lib/redux/slices/authSlice";
 import { SignUpValidation } from "@/utils/schema";
 
 const notify = () => {
   toast.success("OTP sent, check your email", {
     position: "bottom-center",
-    autoClose: 7000,
+    autoClose: 5000,
     hideProgressBar: true,
     closeOnClick: true,
     pauseOnHover: true,
     draggable: true,
-    progress: undefined,
     theme: "colored",
     style: {
-      color: "#fff",
       backgroundColor: "#3563E9",
-      padding: "0px",
+      borderRadius: "12px",
     },
   });
 };
@@ -274,9 +34,10 @@ const notify = () => {
 export default function SignUp() {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState<boolean>(false);
+  
   const {
     signupHandler,
-    auth: { isAuthenticated, isLoading, error },
+    auth: { isLoading, error },
   } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -313,171 +74,235 @@ export default function SignUp() {
     },
   });
 
-  const { values, errors, touched, handleChange, handleBlur, handleSubmit } =
-    formik;
+  const { values, errors, touched, handleChange, handleBlur, handleSubmit } = formik;
 
-  const handleFieldChange = (e: any) => {
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
     formik.setFieldTouched(e.target.name, true, false);
   };
 
+  // Password strength indicators
+  const passwordChecks = {
+    length: values.password.length >= 8,
+    uppercase: /[A-Z]/.test(values.password),
+    lowercase: /[a-z]/.test(values.password),
+    number: /[0-9]/.test(values.password),
+  };
+
+  const showPasswordStrength = values.password.length > 0;
+
   return (
-    <div className="h-full w-full flex items-center justify-center font-[Poppins]">
-      <div className="w-2/3 gap-4">
-        <h1 className="text-2xl text-center font-roboto pb-4 text-black mb-3">
-          CREATE ACCOUNT
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+          Create your account
         </h1>
-        {error && error.data && (
-          <div className="w-full border border-red-600/50 text-red-600 rounded-lg py-2.5 text-sm font-light flex items-center space-x-3 mb-3 pl-3">
-            <Image
-              src="/images/sign-error.svg"
-              width={20}
-              height={20}
-              alt="error sign"
-              className="object-contain cursor-pointer"
-              onClick={() => dispatch(resetAuth())}
-            />
-            <p>
-              {error?.status === "FETCH_ERROR"
-                ? "Network Error"
-                : error?.data.error}
-            </p>
-          </div>
-        )}
-        {/* Signup Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col space-y-2 mb-3 text-secondary"
-          noValidate
-        >
-          {/* Email */}
+        <p className="text-muted-foreground">
+          Start submitting complaints anonymously
+        </p>
+      </div>
+
+      {/* Error Alert */}
+      {error && error.data && (
+        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+          <Image
+            src="/images/sign-error.svg"
+            width={20}
+            height={20}
+            alt="error"
+            className="cursor-pointer flex-shrink-0"
+            onClick={() => dispatch(resetAuth())}
+          />
+          <p className="text-sm text-destructive">
+            {error?.status === "FETCH_ERROR"
+              ? "Network Error. Please check your connection."
+              : error?.data.error}
+          </p>
+        </div>
+      )}
+
+      {/* Signup Form */}
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        {/* Email Input */}
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium text-foreground">
+            Email address
+          </label>
           <div className="relative">
-            <AiOutlineMail className="absolute left-3 top-[14px] font-light text-sm" />
+            <IconMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
+              id="email"
               type="email"
+              name="email"
+              placeholder="name@example.com"
               value={values.email}
               onChange={handleFieldChange}
               onBlur={handleBlur}
-              placeholder="Your Email"
-              name="email"
-              className={`text-xs py-3 leading-4 border border-blue-200 w-full pl-10 rounded-lg px-3 focus:outline-none focus:ring-1 focus:ring-blue-300 ${
-                errors.email && touched.email && "border-red-500"
+              className={`auth-input pl-12 ${
+                errors.email && touched.email ? "border-destructive focus:ring-destructive/20 focus:border-destructive" : ""
               }`}
             />
-            {/* error message */}
-            {errors.email && touched.email && (
-              <p className="text-red-500 text-12 font-light">{errors.email}</p>
-            )}
           </div>
+          {errors.email && touched.email && (
+            <p className="text-sm text-destructive flex items-center gap-1">
+              <IconX className="w-4 h-4" />
+              {errors.email}
+            </p>
+          )}
+        </div>
 
-          {/* Password */}
+        {/* Password Input */}
+        <div className="space-y-2">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
+            Password
+          </label>
           <div className="relative">
-            <MdOutlinePassword className="absolute left-3 top-[12px] font-light text-sm" />
+            <IconLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
+              id="password"
               type={isVisible ? "text" : "password"}
+              name="password"
+              placeholder="Create a strong password"
               value={values.password}
               onChange={handleFieldChange}
               onBlur={handleBlur}
-              placeholder="Password"
-              name="password"
-              className={`text-xs py-3 border-blue-200 leading-4 border w-full outline-none pl-10 rounded-lg px-3 focus:outline-none focus:ring-1 focus:ring-blue-300 ${
-                errors.password && touched.password && "border-red-500"
+              className={`auth-input pl-12 pr-12 ${
+                errors.password && touched.password ? "border-destructive focus:ring-destructive/20 focus:border-destructive" : ""
               }`}
             />
-            {isVisible ? (
-              <MdOutlineRemoveRedEye
-                name="password"
-                className="cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsVisible(false)}
-              />
-            ) : (
-              <FaRegEyeSlash
-                className="absolute top-3 cursor-pointer right-[15px] text-sm"
-                onClick={() => setIsVisible(true)}
-              />
-            )}
-            {/* error message */}
-            {errors.password && touched.password && (
-              <p className="text-red-500 text-12 font-light">
-                {errors.password}
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => setIsVisible(!isVisible)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isVisible ? (
+                <IconEyeOff className="w-5 h-5" />
+              ) : (
+                <IconEye className="w-5 h-5" />
+              )}
+            </button>
           </div>
+          {errors.password && touched.password && (
+            <p className="text-sm text-destructive flex items-center gap-1">
+              <IconX className="w-4 h-4" />
+              {errors.password}
+            </p>
+          )}
+          
+          {/* Password Strength Indicators */}
+          {showPasswordStrength && (
+            <div className="grid grid-cols-2 gap-2 mt-3 p-3 bg-muted/50 rounded-lg">
+              {[
+                { check: passwordChecks.length, label: "8+ characters" },
+                { check: passwordChecks.uppercase, label: "Uppercase letter" },
+                { check: passwordChecks.lowercase, label: "Lowercase letter" },
+                { check: passwordChecks.number, label: "Number" },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-2 text-xs">
+                  {item.check ? (
+                    <IconCheck className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />
+                  )}
+                  <span className={item.check ? "text-green-600" : "text-muted-foreground"}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-          {/* Confirm Password */}
+        {/* Confirm Password Input */}
+        <div className="space-y-2">
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+            Confirm password
+          </label>
           <div className="relative">
-            <MdOutlinePassword className="absolute left-3 top-[12px] font-light text-sm" />
+            <IconLock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
+              id="confirmPassword"
               type={isConfirmVisible ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm your password"
               value={values.confirmPassword}
               onChange={handleFieldChange}
               onBlur={handleBlur}
-              placeholder="Confirm Password"
-              name="confirmPassword"
-              className={`text-xs border-blue-200 py-3 leading-4 border w-full outline-none pl-10 rounded-lg px-3 focus:outline-none focus:ring-1 focus:ring-blue-00 ${
-                errors.confirmPassword &&
-                touched.confirmPassword &&
-                "border-red-500"
+              className={`auth-input pl-12 pr-12 ${
+                errors.confirmPassword && touched.confirmPassword ? "border-destructive focus:ring-destructive/20 focus:border-destructive" : ""
               }`}
             />
-            {isConfirmVisible ? (
-              <MdOutlineRemoveRedEye
-                className="cursor-pointer absolute top-3 right-[15px] text-sm"
-                onClick={() => setIsConfirmVisible(false)}
-              />
-            ) : (
-              <FaRegEyeSlash
-                className="absolute top-3 cursor-pointer right-[15px] text-sm"
-                onClick={() => setIsConfirmVisible(true)}
-              />
-            )}
-            {/* error message */}
-            {errors.confirmPassword && touched.confirmPassword && (
-              <p className="text-red-500 text-12 font-light">
-                {errors.confirmPassword}
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => setIsConfirmVisible(!isConfirmVisible)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isConfirmVisible ? (
+                <IconEyeOff className="w-5 h-5" />
+              ) : (
+                <IconEye className="w-5 h-5" />
+              )}
+            </button>
           </div>
+          {errors.confirmPassword && touched.confirmPassword && (
+            <p className="text-sm text-destructive flex items-center gap-1">
+              <IconX className="w-4 h-4" />
+              {errors.confirmPassword}
+            </p>
+          )}
+        </div>
 
-          <button
-            className="bg-[#3563E9] font-medium text-lg border-transparent py-2 text-white cursor-pointer hover:bg-custom-blue/75 transition duration-150 ease-linear rounded-lg my-3"
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center gap-x-3 bg-transparent">
-                <div className="spinner"></div>
-                <span>Processing . . .</span>
-              </div>
-            ) : (
-              <span>Create Account</span>
-            )}
-          </button>
-        </form>
-        <div className="flex flex-row items-center w-full my-4 mx-auto">
-          <div className="flex-grow bg-gray-600/25 h-[1px] "></div>
-          <div className="px-5 text-gray-600 ">or</div>
-          <div className="flex-grow bg-gray-600/25 h-[1px] "></div>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="auth-button"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-3">
+              <div className="spinner" />
+              <span>Creating account...</span>
+            </span>
+          ) : (
+            <span>Create account</span>
+          )}
+        </button>
+      </form>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
         </div>
-        <div className="gap-y-4 pt-2">
-          <button className="py-2 text-white w-full flex justify-center items-center border-none cursor-pointer hover:bg-background rounded-3xl">
-            <div className="flex flex-row items-center">
-              <FcGoogle className="m-1 mx-5 text-base" />
-              <span className="pr-2 text-gray-900 text-sm font-medium">
-                Continue with Google
-              </span>
-            </div>
-          </button>
-        </div>
-        <div className="text-center pt-2 mt-3">
-          <div className="text-12 flex justify-center items-center">
-            <p className="text-black">I have an account?</p>
-            <Link href="/login" className="font-medium pl-2">
-              <span className="text-blue-500 hover:underline">Sign in</span>
-            </Link>
-          </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-4 text-muted-foreground">
+            or continue with
+          </span>
         </div>
       </div>
+
+      {/* Social Login */}
+      <button
+        type="button"
+        className="auth-button-secondary flex items-center justify-center gap-3"
+      >
+        <FcGoogle className="w-5 h-5" />
+        <span>Continue with Google</span>
+      </button>
+
+      {/* Sign In Link */}
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          Sign in
+        </Link>
+      </p>
+
+      <ToastContainer />
     </div>
   );
 }
