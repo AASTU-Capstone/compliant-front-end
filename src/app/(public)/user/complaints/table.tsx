@@ -1,12 +1,25 @@
 "use client";
 import DataTable from "@/shared/table";
-import { ActionIcon, Box } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { Column } from "react-table";
 import { GetComplaintsForUserResponse } from "@/types";
 import { IconEye } from "@tabler/icons-react";
 import ViewComplaintById from "./viewmodal";
 import { useDisclosure } from "@mantine/hooks";
+
+const getStatusStyle = (status: string) => {
+  const statusLower = status?.toLowerCase() || "";
+  if (statusLower === "resolved") {
+    return "bg-green-100 text-green-700 border-green-200";
+  }
+  if (statusLower === "pending") {
+    return "bg-amber-100 text-amber-700 border-amber-200";
+  }
+  if (statusLower === "rejected") {
+    return "bg-red-100 text-red-700 border-red-200";
+  }
+  return "bg-blue-100 text-blue-700 border-blue-200";
+};
 
 const MyComplaints = ({
   data,
@@ -35,53 +48,56 @@ const MyComplaints = ({
   const columns: Array<Column<GetComplaintsForUserResponse>> = useMemo(
     () => [
       {
-        Header: "Complaints Title",
+        Header: "Title",
         accessor: "title",
         Cell: ({ value }) => (
-          <div className="text-sm font-medium text-gray-900">{value}</div>
+          <div className="font-medium text-foreground">{value}</div>
+        ),
+      },
+      {
+        Header: "Category",
+        accessor: "category",
+        Cell: ({ value }) => (
+          <span className="px-3 py-1 text-xs font-medium rounded-full border bg-primary/10 text-primary border-primary/20">
+            {value}
+          </span>
         ),
       },
       {
         Header: "Status",
         accessor: "status",
-        Cell: ({ value }) => {
-          const statusClass =
-            value === "resolved"
-              ? "bg-green-200 text-green-800"
-              : value === "pending"
-                ? "bg-blue-200 text-blue-800"
-                : value === "rejected"
-                  ? "bg-red-200 text-red-800"
-                  : "bg-gray-200 text-gray-800";
-          return (
-            <span
-              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}`}
-            >
-              {value}
-            </span>
-          );
-        },
+        Cell: ({ value }) => (
+          <span
+            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyle(value)}`}
+          >
+            {value}
+          </span>
+        ),
       },
       {
         Header: "Created Date",
         accessor: "createdAt",
-      },
-      {
-        Header: "Category",
-        accessor: "category",
+        Cell: ({ value }) => (
+          <span className="text-muted-foreground">
+            {value
+              ? new Date(value).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-"}
+          </span>
+        ),
       },
       {
         Header: "Action",
         Cell: ({ row }) => (
-          <div className="flex space-x-4">
-            <ActionIcon
-              variant="light"
-              onClick={() => prepareViewModel(row.original.id)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <IconEye className="w-5 h-5" />
-            </ActionIcon>
-          </div>
+          <button
+            onClick={() => prepareViewModel(row.original.id)}
+            className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-200"
+          >
+            <IconEye size={18} />
+          </button>
         ),
       },
     ],
@@ -89,7 +105,7 @@ const MyComplaints = ({
   );
 
   return (
-    <Box className="w-full bg-primarykey-body">
+    <div>
       <DataTable
         columns={columns}
         data={data}
@@ -105,7 +121,7 @@ const MyComplaints = ({
         closeViewModal={closeViewModal}
         isViewModalOpened={isViewModalOpened}
       />
-    </Box>
+    </div>
   );
 };
 
