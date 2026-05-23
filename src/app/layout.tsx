@@ -1,10 +1,10 @@
-import Provider from "@/providers/Mantine.provider";
-import type { Metadata, Viewport } from "next";
 import ReduxProvider from "@/lib/providers";
-import { PrimeReactProvider } from "primereact/api";
-import { Inter, DM_Sans } from "next/font/google";
-import "./globals.css";
+import Provider from "@/providers/Mantine.provider";
 import { WebSocketProvider } from "@/providers/WebSocketContext";
+import type { Metadata, Viewport } from "next";
+import { DM_Sans, Inter } from "next/font/google";
+import { PrimeReactProvider } from "primereact/api";
+import "./globals.css";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -19,6 +19,17 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Anon Whisper - Anonymous Complaint Platform",
   description: "A secure platform for submitting complaints while keeping your identity protected.",
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' }
+    ],
+  },
+  manifest: '/site.webmanifest',
 };
 
 export const viewport: Viewport = {

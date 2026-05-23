@@ -1,15 +1,22 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 const isStaticOrInternalPath = (pathname: string) => {
-  return (
+  // Check for Next.js internals and known asset directories
+  if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.includes(".map") ||
     pathname.includes("/assets") ||
     pathname.includes("/images")
-  );
+  ) {
+    return true;
+  }
+
+  // Allow favicon, icons, manifest, and other static files served from public/
+  const staticExtensions = [".ico", ".png", ".jpg", ".jpeg", ".svg", ".webp", ".webmanifest", ".xml", ".txt"];
+  return staticExtensions.some((ext) => pathname.endsWith(ext));
 };
 interface DecodedToken {
   typ: any;
@@ -121,9 +128,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-{
-  /*
-
+/*
 the routes that are not protected are the following:
 - /auth/create-profile => should it be implemented? .... not sure
 - /auth/reset-password => because the ui is not done yet
@@ -136,6 +141,18 @@ the routes that are protected are the following:
 - /auth/reset-password/change
 
 Any Route that starts with /settings is protected and should be accessed only if the user is authenticated and is logged in.
-
 */
-}
+
+// Only run middleware on page routes, not on static files or assets
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     * - Files with common static extensions (.png, .jpg, .svg, .ico, .webp, .webmanifest, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|webmanifest|xml|txt)$).*)",
+  ],
+};
