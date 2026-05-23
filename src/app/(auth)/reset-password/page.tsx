@@ -1,16 +1,13 @@
 "use client";
+
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AiOutlineMail } from "react-icons/ai";
-// import Link from "next/link";
-// import { CiUser } from "react-icons/ci";
-// import { MdOutlineMailOutline } from "react-icons/md";
-// import { useForgotPasswordMutation } from "@/lib/redux/features/user";
+import { IconMail, IconArrowLeft } from "@tabler/icons-react";
 
-type Props = {};
+import { useAuth } from "@/hooks/useAuth";
 
-export default function SignUp({}: Props) {
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const {
@@ -22,16 +19,19 @@ export default function SignUp({}: Props) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
     if (email === "" || email === null) {
       setError("Email is required");
       return;
     }
     if (!emailRegex.test(email)) {
-      setError("Email is not valid");
+      setError("Please enter a valid email address");
       return;
     }
+    
     setError("");
     sessionStorage.setItem("email", email);
+    
     try {
       const res = await forgotPasswordHandler({ email: email });
       if (res && "data" in res && res?.data?.success) {
@@ -48,52 +48,79 @@ export default function SignUp({}: Props) {
   };
 
   return (
-    <div className="flex justify-center items-center h-full font-[Poppins]">
-      <div className=" w-full gap-4 flex flex-col items-center space-y-2">
-        <h1 className="text-2xl text-center font-roboto text-[#333333]">
-          FORGOT PASSWORD
+    <div className="space-y-8">
+      {/* Back Link */}
+      <Link
+        href="/login"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <IconArrowLeft className="w-4 h-4" />
+        Back to login
+      </Link>
+
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+          Forgot your password?
         </h1>
-        <p className="text-center text-xs text-[#989898] mb-2">
-          Please enter your email to reset the password
+        <p className="text-muted-foreground">
+          No worries! Enter your email and we&apos;ll send you a reset code.
         </p>
-
-        {/* Form | Email */}
-        <form
-          onSubmit={handleSubmit}
-          className="gap-2 flex flex-col items-center justify-center w-full  "
-        >
-          <div className="gap-y-3 w-full">
-            <div className="relative w-full">
-              <AiOutlineMail className="absolute left-[100px] top-[14px] font-light text-sm" />
-              <div className="flex justify-center items-center w-full">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  placeholder="Your Email"
-                  className="text-sm py-3 w-3/4 border-blue-200 text-secondary leading-4 border outline-none pl-10 rounded-lg  px-3  focus:outline-none focus:ring-1 focus:ring-blue-300"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1 w-full justify-center items-center mt-3">
-              <button
-                type="submit"
-                className="bg-primarykey font-roboto text-sm border-transparent py-3 text-white cursor-pointer hover:bg-custom-blue/75 transition duration-150 ease-linear rounded-lg w-1/3 mx-auto mt-4"
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-x-3 bg-transparent">
-                    <div className="spinner"></div>
-                    <span>Processing . . .</span>
-                  </div>
-                ) : (
-                  <span>Reset Password</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </form>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Email Input */}
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium text-foreground">
+            Email address
+          </label>
+          <div className="relative">
+            <IconMail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={handleEmailChange}
+              className={`auth-input pl-12 ${
+                error ? "border-destructive focus:ring-destructive/20 focus:border-destructive" : ""
+              }`}
+            />
+          </div>
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="auth-button"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-3">
+              <div className="spinner" />
+              <span>Sending code...</span>
+            </span>
+          ) : (
+            <span>Send reset code</span>
+          )}
+        </button>
+      </form>
+
+      {/* Help Text */}
+      <p className="text-center text-sm text-muted-foreground">
+        Remember your password?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 }

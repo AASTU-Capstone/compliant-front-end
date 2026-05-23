@@ -1,26 +1,51 @@
 "use client";
+
 import React from "react";
-import { FaRegCircleCheck } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
+import { IconCircleCheck, IconArrowRight } from "@tabler/icons-react";
 
-type Props = {};
-
-export default function Success({}: Props) {
+export default function Success() {
   const router = useRouter();
+
   const handleOnClick = () => {
     router.push("/login");
   };
+
   return (
-    <div className="flex justify-center items-center h-full">
-      <div className="flex flex-col justify-center items-center w-2/3 gap-2">
-        <FaRegCircleCheck className="text-8xl font-light text-[#3563E9] m-2" />
-        <h1 className="mb-3 text-4xl">Successfully Verified</h1>
-        <button
-          className="text-white bg-[#3563E9] rounded-lg text-sm px-7 py-3"
-          onClick={handleOnClick}
-        >
-          Login
-        </button>
+    <div className="space-y-8 text-center">
+      {/* Success Icon */}
+      <div className="flex justify-center">
+        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center">
+          <IconCircleCheck className="w-14 h-14 text-green-500" />
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="space-y-3">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+          Email verified!
+        </h1>
+        <p className="text-muted-foreground max-w-sm mx-auto">
+          Your email has been successfully verified. You can now sign in to your account.
+        </p>
+      </div>
+
+      {/* Action Button */}
+      <button
+        onClick={handleOnClick}
+        className="auth-button inline-flex items-center justify-center gap-2"
+      >
+        <span>Continue to login</span>
+        <IconArrowRight className="w-5 h-5" />
+      </button>
+
+      {/* Decorative Elements */}
+      <div className="pt-8">
+        <div className="flex justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-primary/20" />
+          <div className="w-2 h-2 rounded-full bg-primary/40" />
+          <div className="w-2 h-2 rounded-full bg-primary" />
+        </div>
       </div>
     </div>
   );
