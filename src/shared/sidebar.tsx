@@ -3,12 +3,11 @@ import CreateComplaint from "@/app/(public)/user/_components/create-complaint";
 import { Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconPlus,
-  IconChevronLeft,
-  IconChevronRight,
-  IconShieldLock,
+    IconChevronLeft,
+    IconChevronRight,
+    IconPlus,
+    IconShieldLock,
 } from "@tabler/icons-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -75,7 +74,7 @@ function Sidebar({ role }: { role: string }) {
 
       <aside
         className={`
-          relative flex flex-col h-screen bg-card border-r border-border
+          relative z-30 flex flex-col h-screen bg-card border-r border-border
           transition-all duration-300 ease-in-out
           ${collapsed ? "w-20" : "w-72"}
         `}
@@ -83,7 +82,7 @@ function Sidebar({ role }: { role: string }) {
         {/* Collapse Toggle Button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-8 z-10 flex items-center justify-center w-6 h-6 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+          className="absolute -right-3 top-8 z-40 flex items-center justify-center w-6 h-6 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors"
         >
           {collapsed ? (
             <IconChevronRight size={14} />
